@@ -47,7 +47,7 @@ def main():
 
     # Geometrie
     N = 6                        # Anzahl Heatpipes pro Bohrloch [-]
-    r_b = boreField[0].radius()  # Radius der Erdwärmesondenbohrung [m]
+    r_b = boreField[0].r_b  # Radius der Erdwärmesondenbohrung [m]
     r_w = 0.12                # Radius der Wärmerohr-Mittelpunkte [m]
     r_pa = 0.016                 # Außenradius der Isolationsschicht [m]
     r_iso = 0.016                # Innenradius der Isolationsschicht [m]

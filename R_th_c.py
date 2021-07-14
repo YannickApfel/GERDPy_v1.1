@@ -52,7 +52,7 @@ def R_th_c(borefield):
 
     # %% 3.) thermischer Kontaktwiderstand des Erwärmesondenfelds
 
-    r_b = borefield[0].radius()
+    r_b = borefield[0].r_b
     H_field = length_field(borefield)
 
     R_th_c = (2 * pi * r_b * alpha_WS * H_field) ** -1

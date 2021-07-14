@@ -27,7 +27,7 @@ class Borehole(object):
         self.H = float(H)
         self.D = float(D)
         self.r_b = float(r_b)
-        self.x = float(x) 
+        self.x = float(x)
         self.y = float(y)
         self.tilt = float(tilt)
         self.orientation = float(orientation)
@@ -37,12 +37,6 @@ class Borehole(object):
              ' y={self.y}, tilt={self.tilt},'
              ' orientation={self.orientation})').format(self=self)
         return s
-
-    def length(self):
-        return self.H
-
-    def radius(self):
-        return self.r_b
 
     def distance(self, target):
         """
@@ -250,5 +244,5 @@ def length_field(borefield):
     '''
     H_field = 0
     for i in range(len(borefield)):
-        H_field += borefield[i].length()
+        H_field += borefield[i].H
     return H_field

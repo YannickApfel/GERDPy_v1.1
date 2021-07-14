@@ -20,7 +20,7 @@ def R_th_b(lambda_inf, borefield, hp):
 
     # Geometrie Erdwärmesonde
     H_field = length_field(borefield)   # Gesamtlänge Sondenfeld [m]
-    r_b = borefield[0].radius()         # Radius Bohrloch [m]
+    r_b = borefield[0].r_b         # Radius Bohrloch [m]
 
     # Geometrie Heatpipes
     N = hp.N                            # Anzahl Heatpipes im Bohrloch [-]
