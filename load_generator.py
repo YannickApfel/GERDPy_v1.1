@@ -1,34 +1,25 @@
 # -*- coding: utf-8 -*-
-""" Thermal load generator
+""" Ermittlung der Systemleistung anhand einer Leistungsbilanz an der Oberfläche
+    des Heizelements für jeden Zeitschritt
 
-    Author: Yannick Apfel
+    Q. = (T_g - T_surf) / R_th_tot = Summe Wärmeströme am Heizelement
+    Nullstellenproblem:
+        F(Q.) = -Q. + Summe Wärmeströme am Heizelement = 0
+
+    Autor: Yannick Apfel
 """
-
+import sympy as sp
 import numpy as np
-from scipy.constants import pi
+from alpha_konv import alpha_konv
 
 
-def load(x):
-    """
-    Synthetic load profile of Bernier et al. (2004).
+def load(u_inf, A_he, T_b, R_th, T_inf):
+    # einfaches System: nur Konvektion an der Oberfläche
+    Q = sp.symbols('Q')
+    F = sp.Eq(alpha_konv(u_inf) * A_he * (T_b - Q * R_th - T_inf) - Q, 0)
 
-    Returns load y (in watts) at time x (in hours).
-    """
-    A = 2000.0
-    B = 2190.0
-    C = 80.0
-    D = 2.0
-    E = 0.01
-    F = 0.0
-    G = 0.95
+    Q_sol = np.array(sp.solve(F, Q))
+    if Q_sol[0] < 0:  # Q. < 0 bei Gravitationswärmerohren nicht möglich
+        Q_sol[0] = 0
 
-    func = (168.0-C)/168.0
-    for i in [1, 2, 3]:
-        func += 1.0/(i*pi) * (np.cos(C*pi*i/84.0)-1.0) \
-                          * (np.sin(pi*i/84.0*(x-B)))
-    func = func*A*np.sin(pi/12.0*(x-B))  \
-           *np.sin(pi/4380.0*(x-B))
-
-    y = func + (-1.0)**np.floor(D/8760.0*(x-B))*abs(func) \
-      + E*(-1.0)**np.floor(D/8760.0*(x-B))/np.sign(np.cos(D*pi/4380.0*(x-F))+G)
-    return abs(-np.array([y])) * 3
+    return Q_sol

@@ -16,7 +16,8 @@ from matplotlib.ticker import AutoMinorLocator
 from scipy.constants import pi
 
 # import GERDPy-modules
-import boreholes, heatpipes, heating_element, gfunction, load_aggregation
+import boreholes, heatpipes, heating_element, gfunction, load_aggregation, load_weather_data
+from load_generator_synthetic import synthetic_load
 from load_generator import load
 from geometrycheck import check_geometry
 from R_th_tot import R_th_tot
@@ -29,7 +30,7 @@ def main():
 
     # 1.1) Erdboden
     a = 1.0e-6                  # Temperaturleitfähigkeit [m2/s]
-    lambda_inf = 2.0            # Wärmeleitfähigkeit [W/mK]
+    lambda_g = 2.0              # Wärmeleitfähigkeit [W/mK]
     T_g = 10.0                  # ungestörte Bodentemperatur [degC]
 
     # 1.2) Erdwärmesondenfeld
@@ -82,7 +83,8 @@ def main():
 
     # Simulationsparameter
     dt = 3600.                           # Zeitschrittweite [s]
-    tmax = 0.5 * 1 * (8760./12) * 3600.  # Gesamt-Simulationsdauer [s]
+    # tmax = 3 * 1 * (8760./12) * 3600.    # Gesamt-Simulationsdauer [s]
+    tmax = 100 * 3600.
     Nt = int(np.ceil(tmax/dt))           # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -103,10 +105,10 @@ def main():
     # 3.) Ermittlung thermischer Widerstand Bohrlochrand bis Oberfläche
     # -------------------------------------------------------------------------
 
-    R_th = R_th_tot(lambda_inf, boreField, hp, he)
+    R_th = R_th_tot(lambda_g, boreField, hp, he)
 
     # -------------------------------------------------------------------------
-    # 4.) Ermittlung der G-Function
+    # 4.) Ermittlung der G-Function (Bodenmodell)
     # -------------------------------------------------------------------------
 
     # Initialisierung Zeitstempel (Simulationsdauer)
@@ -121,16 +123,26 @@ def main():
                                           nSegments=12)
 
     # Initialisierung der Simulation mit 'load_aggregation.py'
-    LoadAgg.initialize(gFunc/(2*pi*lambda_inf))
+    LoadAgg.initialize(gFunc/(2*pi*lambda_g))
 
     # -------------------------------------------------------------------------
-    # 5.) Iterationsschleife (Simulation mit Nt Zeitschritten der Länge dt)
+    # 5.) Import / Generierung der Wetterdaten
+    # -------------------------------------------------------------------------
+
+    # Windgeschwindigkeit u_inf über die Simulationsdauer tmax
+    u_inf = load_weather_data.get_u_inf(Nt)
+
+    # Umgebungstemperatur über die Simulationsdauer
+    T_inf = load_weather_data.get_T_inf(Nt)
+
+    # -------------------------------------------------------------------------
+    # 6.) Iterationsschleife (Simulation mit Nt Zeitschritten der Länge dt)
     # -------------------------------------------------------------------------
 
     time = 0.
     i = -1
 
-    # Initialsierung Temperaturvektoren (ein Eintrag pro Zeitschritt)
+    # Initialisierung Temperaturvektoren (ein Eintrag pro Zeitschritt)
     T_b = np.zeros(Nt)
     # T_grout = np.zeros(Nt)
     # T_hp = np.zeros(Nt)
@@ -139,6 +151,8 @@ def main():
 
     Q = np.zeros(Nt)
 
+    print('Iterating...')
+
     while time < tmax:  # Iterationsschleife (ein Durchlauf pro Zeitschritt)
 
         # Zeitschritt um 1 inkrementieren
@@ -146,8 +160,14 @@ def main():
         i += 1
         LoadAgg.next_time_step(time)
 
-        # Ermittlung der Entzugsleistung mit 'load_generator.py'
-        Q[i] = load(time/3600.)
+        # Q[i] = synthetic_load(time/3600.)
+
+        # Ermittlung der Entzugsleistung
+        if i == 0:  # Annahme T_b = T_g für ersten Zeitschritt
+            Q[i] = load(u_inf[i], A_he, T_g, R_th, T_inf[i])
+
+        if i > 0:  # alle weiteren Zeitschritte (ermittelte Bodentemperatur)
+            Q[i] = load(u_inf[i], A_he, T_b[i-1], R_th, T_inf[i])
 
         # Aufprägung der ermittelten Entzugsleistung mit 'load_aggregation.py'
         LoadAgg.set_current_load(Q[i]/H_field)
@@ -156,21 +176,11 @@ def main():
         deltaT_b = LoadAgg.temporal_superposition()
         T_b[i] = T_g - deltaT_b
 
-        # Temperaturkaskade (T-Verlust bis zur Oberfläche)
-        # Temperatur am Bohrlochrand (Hinterfüllmaterial-seitig)
-        # T_grout[i] = T_b[i] - Q[i] * R_th_c(boreField)
-
-        # Temperatur an den Wärmerohren im Verdampfer
-        # T_hp[i] = T_grout[i] - Q[i] * R_th_b(lambda_inf, boreField, hp)
-
-        # Temperatur an Wärmerohren im Kondensator (Heizelement)
-        # T_he[i] = T_hp[i] - Q[i] * R_th_hp(boreField, hp)
-
         # Temperatur an der Oberfläche des Heizelements
         T_surf[i] = T_b[i] - Q[i] * R_th
 
     # -------------------------------------------------------------------------
-    # 6.) Plots
+    # 7.) Plots
     # -------------------------------------------------------------------------
 
     # Zeitstempel (Simulationsdauer)
