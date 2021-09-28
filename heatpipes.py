@@ -51,33 +51,6 @@ class Heatpipes(object):
              ' lambda_p={self.lambda_p})').format(self=self)
         return s
 
-    def N(self):
-        return self.N
-
-    def r_b(self):
-        return self.r_b
-
-    def r_w(self):
-        return self.r_w
-
-    def r_pa(self):
-        return self.r_pa
-
-    def r_iso(self):
-        return self.r_iso
-
-    def r_pi(self):
-        return self.r_pi
-
-    def lambda_b(self):
-        return self.lambda_b
-
-    def lambda_iso(self):
-        return self.lambda_iso
-
-    def lambda_p(self):
-        return self.lambda_p
-
     def xy_mat(self):
         """
         Gibt eine Nx2 Matrix mit den Koordinaten der Heatpipe-Mittelpunkte

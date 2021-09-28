@@ -27,12 +27,3 @@ class HeatingElement(object):
         s = ('HeatingElement(A_he={self.A_he}, x_min={self.x_min}, \
              lambda_Bet={self.lambda_Bet}').format(self=self)
         return s
-
-    def A_he(self):
-        return self.A_he
-
-    def x_min(self):
-        return self.x_min
-
-    def lambda_Bet(self):
-        return self.lambda_Bet
