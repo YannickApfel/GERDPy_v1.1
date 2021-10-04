@@ -1,50 +1,45 @@
 # -*- coding: utf-8 -*-
-""" Autor: Yannick Apfel
+""" Import der notwendigen Wetterdaten aus .csv-File
+
+    Autor: Yannick Apfel
 """
-import numpy as np
 
 
-def load_u_inf(Nt):
+def get_weather_data(Nt):
 
-    # Windgeschwindigkeit (Vektor mit Nt random floats zwischen 0 und 5) [m/s]
-    u_inf = np.random.uniform(0, 5, Nt)
+    import numpy as np
+    import pandas as pd
+
+    # Dateipfad der Wetterdaten-Datei definieren
+    path = './data/Wetterdaten_München-Riem_h.xlsx'
+
+    # Wetterdaten importieren
+    data = pd.read_excel(path)
+
+    # 1.) Windgeschwindigkeit (Vektor mit Nt random floats zwischen 0 und 5) [m/s]
     # u_inf = np.ones(Nt)
+    # u_inf = np.random.uniform(0, 5, Nt)
+    u_inf = np.array(data.iloc[4:(Nt+5), 6], dtype='float')
 
-    return u_inf
+    # 2.) Umgebungstemperatur (Vektor mit Nt random floats zwischen -2 und 3) [°C]
+    # Theta_inf = np.ones(Nt) * -1
+    # Theta_inf = np.random.uniform(-2, 3, Nt)
+    # Theta_inf[50:60] = 12
+    Theta_inf = np.array(data.iloc[4:(Nt+5), 4], dtype='float')
 
-
-def load_T_inf(Nt):
-
-    # Umgebungstemperatur (Vektor mit Nt random floats zwischen -2 und 3) [°C]
-    T_inf = np.random.uniform(-2, 3, Nt)
-    # T_inf = np.ones(Nt) * -1
-    T_inf[50:60] = 12
-
-    return T_inf
-
-
-def load_S_w(Nt):
-
-    # Schneefallrate (Vektor mit Nt random floats zwischen 0 und 1.5) [mm/h]
-    S_w = np.random.uniform(0, 1.5, Nt)
+    # 3.) Schneefallrate (Vektor mit Nt random floats zwischen 0 und 1.5) [mm/h]
     # S_w = np.ones(Nt)
+    # S_w = np.random.uniform(0, 1.5, Nt)
+    S_w = np.array(data.iloc[4:(Nt+5), 9], dtype='float')
 
-    return S_w
-
-
-def load_B(Nt):
-    
-    # Bewölkungsgrad (Vektor mit Nt ints zwischen 0 und 8) [-]
-    B = np.random.randint(9, size=Nt)
+    # 4.) Bewölkungsgrad (Vektor mit Nt ints zwischen 0 und 8) [-]
     # B = np.ones(Nt) * 3
-    
-    return B
+    # B = np.random.randint(9, size=Nt)
+    B = np.array(data.iloc[4:(Nt+5), 7], dtype='int') / 8
 
-
-def load_Phi(Nt):
-    
-    # rel. Luftfeuchte (Vektor mit Nt floats zwischen 0.63 und 0.96) [%]
-    Phi = np.random.uniform(0.63, 0.96, Nt)
+    # 5.) rel. Luftfeuchte (Vektor mit Nt floats zwischen 0.63 und 0.96) [%]
     # Phi = np.ones(Nt) * 0.7
-    
-    return Phi
+    # Phi = np.random.uniform(0.63, 0.96, Nt)
+    Phi = np.array(data.iloc[4:(Nt+5), 5], dtype='float') / 100
+
+    return u_inf, Theta_inf, S_w, B, Phi

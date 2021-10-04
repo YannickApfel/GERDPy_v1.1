@@ -6,7 +6,12 @@
 
     todos:
         - GUI für End-User
-        - Kontrollstruktur für Sondenfeld (Einträge leer / falscher Datentyp)
+        - Kontrollstruktur für Wetterdaten (Errorhandling beim Einlesen)
+        
+    Legende:
+        - Temperaturen:
+            - T in Kelvin [K] - für (kalorische) Gleichungen
+            - Theta in Grad Celsius [°C] - Input aus dem Wetterdatenfile
 """
 import sys
 import matplotlib.pyplot as plt
@@ -19,7 +24,7 @@ from scipy.constants import pi
 import boreholes, heatpipes, heating_element, gfunction, load_aggregation
 from load_generator_synthetic import synthetic_load
 from load_generator import *
-from weather_data import *
+from weather_data import get_weather_data
 from geometrycheck import check_geometry
 from R_th_tot import R_th_tot
 
@@ -35,12 +40,12 @@ def main():
     # 1.1) Erdboden
     a = 1.0e-6                  # Temperaturleitfähigkeit [m2/s]
     lambda_g = 2.0              # Wärmeleitfähigkeit [W/mK]
-    T_g = 8.0                  # ungestörte Bodentemperatur [degC]
+    Theta_g = 10.0                  # ungestörte Bodentemperatur [°C]
 
     # 1.2) Erdwärmesondenfeld
 
     # Geometrie-Import (.txt-Datei)
-    boreField = boreholes.field_from_file('./data/custom_field.txt')
+    boreField = boreholes.field_from_file('./data/custom_field_5.txt')
 
     # Sondenmeter (gesamt)
     H_field = boreholes.length_field(boreField)
@@ -75,7 +80,7 @@ def main():
     A_he = 10
 
     # minimaler Oberflächenabstand [mm]
-    x_min = 25
+    x_min = 15
 
     # Wärmeleitfähigkeit des Betonelements [W/mk]
     lambda_Bet = 2.3
@@ -87,7 +92,7 @@ def main():
 
     # Simulationsparameter
     dt = 3600.                           # Zeitschrittweite [s]
-    tmax = 0.25 * 1 * (8760./12) * 3600.    # Gesamt-Simulationsdauer [s]
+    tmax = 1 * 12 * (8760./12) * 3600.    # Gesamt-Simulationsdauer [s]
     # tmax = 100 * 3600.
     Nt = int(np.ceil(tmax/dt))           # Anzahl Zeitschritte [-]
 
@@ -133,12 +138,14 @@ def main():
     # 5.) Import / Generierung der Wetterdaten
     # -------------------------------------------------------------------------
 
-    # Generierung der Wetterdaten-Vektoren
-    u_inf = load_u_inf(Nt)      # Windgeschwindigkeit [m/s]
-    T_inf = load_T_inf(Nt)      # Umgebungstemperatur [°C]
-    S_w = load_S_w(Nt)          # Schneefallrate (Wasserequivalent) [mm/s]
-    B = load_B(Nt) / 8          # Bewölkungsgrad [octal units]
-    Phi = load_Phi(Nt)          # rel Luftfeuchte [%]
+    # Import Wetterdaten aus weather_data.py
+    u_inf, Theta_inf, S_w, B, Phi = get_weather_data(Nt)
+    ''' u_inf - Windgeschwindigkeit [m/s]
+        Theta_inf - Umgebungstemperatur [°C]
+        S_w - Schneefallrate (Wasserequivalent) [mm/s]
+        B - Bewölkungsgrad [octal units / 8]
+        Phi - rel. Luftfeuchte [%]
+    '''
 
     # -------------------------------------------------------------------------
     # 6.) Iterationsschleife (Simulation mit Nt Zeitschritten der Länge dt)
@@ -148,8 +155,8 @@ def main():
     i = -1
 
     # Initialisierung Temperaturvektoren (ein Eintrag pro Zeitschritt)
-    T_b = np.zeros(Nt)      # Bohrlochrand
-    T_surf = np.zeros(Nt)   # Oberfläche Heizelement
+    Theta_b = np.zeros(Nt)      # Bohrlochrand
+    Theta_surf = np.zeros(Nt)   # Oberfläche Heizelement
 
     Q = np.zeros(Nt)
 
@@ -165,22 +172,22 @@ def main():
         # Q[i] = synthetic_load(time/3600.)
 
         # Ermittlung der Entzugsleistung
-        if i == 0:  # Annahme T_b = T_surf = T_g für ersten Zeitschritt
-            Q[i], net_neg, T_surf[i] = load(h_NHN, u_inf[i], T_inf[i], S_w[i], A_he, T_g, R_th, T_g, B[i], Phi[i])
+        if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g für ersten Zeitschritt
+            Q[i], net_neg, Theta_surf[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, R_th, Theta_g, B[i], Phi[i])
 
         if i > 0:  # alle weiteren Zeitschritte (ermittelte Bodentemperatur)
-            Q[i], net_neg, T_surf[i] = load(h_NHN, u_inf[i], T_inf[i], S_w[i], A_he, T_b[i-1], R_th, T_surf[i-1], B[i], Phi[i])
+            Q[i], net_neg, Theta_surf[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], R_th, Theta_surf[i-1], B[i], Phi[i])
 
         # Aufprägung der ermittelten Entzugsleistung mit 'load_aggregation.py'
         LoadAgg.set_current_load(Q[i]/H_field)
 
         # Temperatur am Bohrlochrand
-        deltaT_b = LoadAgg.temporal_superposition()
-        T_b[i] = T_g - deltaT_b
+        deltaTheta_b = LoadAgg.temporal_superposition()
+        Theta_b[i] = Theta_g - deltaTheta_b
 
         # Temperatur an der Oberfläche des Heizelements
         if net_neg == False:
-            T_surf[i] = T_b[i] - Q[i] * R_th
+            Theta_surf[i] = Theta_b[i] - Q[i] * R_th
 
     # -------------------------------------------------------------------------
     # 7.) Plots
@@ -198,22 +205,24 @@ def main():
 
     # Lastprofil (thermische Leistung Q. über die Simulationsdauer)
     ax1 = fig.add_subplot(211)
-    ax1.set_xlabel(r'$t$ (hours)')
-    ax1.set_ylabel(r'$Q$ (W)')
+    # ax1.set_xlabel(r'$t$ [h]')
+    ax1.set_ylabel(r'$Q$ [W]')
     hours = np.array([(j+1)*dt/3600. for j in range(Nt)])
     ax1.plot(hours, Q, 'b-', lw=1.5)  # plot
     ax1.legend(['Entzugsleistung [W]'],
                prop={'size': font['size'] - 5}, loc='upper right')
+    ax1.grid('major')
 
     # Temperaturverläufe
     ax2 = fig.add_subplot(212)
-    ax2.set_xlabel(r'$t$ (hours)')
-    ax2.set_ylabel(r'$T_b$ (degC)')
+    ax2.set_xlabel(r'$t$ [h]')
+    ax2.set_ylabel(r'$T$ [°C]')
     # plots
-    ax2.plot(hours, T_b, 'r-', lw=2.0)
-    ax2.plot(hours, T_surf, 'c-', lw=1.0)
-    ax2.legend(['T_Bohrlochrand [°C]', 'T_Heizelement [°C]'],
+    ax2.plot(hours, Theta_b, 'r-', lw=2.0)
+    ax2.plot(hours, Theta_surf, 'c-', lw=1.0)
+    ax2.legend(['T_Bohrlochrand', 'T_Oberfläche'],
                prop={'size': font['size'] - 5}, loc='upper right')
+    ax2.grid('major')
 
     # Beschriftung Achsenwerte
     ax1.xaxis.set_minor_locator(AutoMinorLocator())
