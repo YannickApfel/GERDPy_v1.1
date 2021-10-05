@@ -30,7 +30,11 @@ def get_weather_data(Nt):
     # 3.) Schneefallrate (Vektor mit Nt random floats zwischen 0 und 1.5) [mm/h]
     # S_w = np.ones(Nt)
     # S_w = np.random.uniform(0, 1.5, Nt)
-    S_w = np.array(data.iloc[4:(Nt+5), 9], dtype='float')
+    S_w = np.array(data.iloc[4:(Nt+5), 3], dtype='float')
+    # Einträge zu null setzen, falls Theta_inf >= 1 °C (Schnee fällt als Regen)
+    for i,j in enumerate(Theta_inf):
+        if j >= 1:
+            S_w[i] = 0
 
     # 4.) Bewölkungsgrad (Vektor mit Nt ints zwischen 0 und 8) [-]
     # B = np.ones(Nt) * 3

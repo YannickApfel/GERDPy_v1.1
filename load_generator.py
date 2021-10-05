@@ -83,16 +83,16 @@ def alpha_kon_VDI(A_he, u, Theta_inf, Theta_surf):  # alpha [W/m²K]
 
     # 2.) Verhältnis (Gr:Re²) als Kriterium für die Fallunterscheidung nach: freier Konvektion, Mischkonvektion, erzwungener Konvektion
     if (Gr / (Re ** 2)) > 10:  # nur freie Konvektion: Vernachlässigung erzwungene Konvektion
-        kon_fr = 1
-        kon_er = 0
+        con_fr = 1
+        con_er = 0
     elif (Gr / (Re ** 2)) < 0.1:  # nur erzwungene Konvektion: Vernachlässigung freie Konvektion
-        kon_fr = 0
-        kon_er = 1
+        con_fr = 0
+        con_er = 1
     else:  # Mischkonvektion
-        kon_fr = 1
-        kon_er = 1
+        con_fr = 1
+        con_er = 1
 
-    if (kon_fr == 1):  # nur freie Konvektion: Vernachlässigung erzwungene Konvektion
+    if (con_fr == 1):  # nur freie Konvektion: Vernachlässigung erzwungene Konvektion
         L_c = L_c_fr
         Ra = Gr * Pr  # Rayleigh-Zahl
         f1_Pr = (1 + (0.322 / Pr) ** (11 / 20)) ** (-20/11)  # Prandtl-Korrekturfaktor
@@ -104,7 +104,7 @@ def alpha_kon_VDI(A_he, u, Theta_inf, Theta_surf):  # alpha [W/m²K]
 
         Nu = Nu_fr
 
-    if (kon_er == 1):  # nur erzwungene Konvektion: Vernachlässigung freie Konvektion
+    if (con_er == 1):  # nur erzwungene Konvektion: Vernachlässigung freie Konvektion
         L_c = L_c_er
 
         Nu_er_lam = 0.664 * math.sqrt(Re) * Pr ** (1/3)  # laminare Nusselt-Zahl (erzwungene Konvektion)
@@ -119,7 +119,7 @@ def alpha_kon_VDI(A_he, u, Theta_inf, Theta_surf):  # alpha [W/m²K]
         Nu_er = ((Theta_inf + 273.15) / (Theta_surf + 273.15)) ** 0.12 * Nu_er_0  # mittlere Nu - korrigiert für T-abhängige Stoffwerte
         Nu = Nu_er
 
-    if (kon_fr == 1 and kon_er == 1):  # Mischkonvektion
+    if (con_fr == 1 and con_er == 1):  # Mischkonvektion
         L_c = L_c_er
         L_c_mix = L_c_er  # Definition der char. Länge entspricht der der erzw. Konvektion (beide Konvektionsarten)
         Gr_mix = L_c_mix ** 3 * 9.81 * beta(Theta_inf) * (Theta_surf - Theta_inf) / (theta_l ** 2)
@@ -217,8 +217,8 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi):
     # 1.) Teil-Wärmeströme aktivieren oder deaktivieren (für unit-testing))
     lat = True
     sen = True
-    kon = True
-    sstr = True
+    con = True
+    rad = True
     eva = True
 
     # Q_latent
@@ -234,16 +234,16 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi):
         Q_sen = 0
 
     # Q_Konvektion
-    if kon is True:
-        Q_kon = alpha_kon_Bentz(u_inf) * (Theta_b_0 - Q * R_th - Theta_inf) * A_he
+    if con is True:
+        Q_con = alpha_kon_Bentz(u_inf) * (Theta_b_0 - Q * R_th - Theta_inf) * A_he
     else:
-        Q_kon = 0
+        Q_con = 0
 
     # Q_Strahlung
-    if sstr is True:  # Theta_surf_0 statt Theta_b_0 - Q * R_th, da sonst 4 Nullstellen
-        Q_str = sigma * epsilon_surf('Beton') * ((Theta_surf_0 + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
+    if rad is True:  # Theta_surf_0 statt Theta_b_0 - Q * R_th, da sonst 4 Nullstellen
+        Q_rad = sigma * epsilon_surf('Beton') * ((Theta_surf_0 + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
     else:
-        Q_str = 0
+        Q_rad = 0
 
     # Q_Verdunstung
     if eva is True:  # Theta_surf_0 statt Theta_b_0 - Q * R_th
@@ -255,7 +255,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi):
         Q_eva = 0
 
     # 2.) stationäre Leistungbilanz am Heizelement (Kopplung Oberfläche mit Erdboden)
-    F_Q = sp.Eq(Q_lat + Q_sen + R_f * (Q_kon + Q_str + Q_eva) - Q, 0)
+    F_Q = sp.Eq(Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva) - Q, 0)
 
     # 3.) Auflösung der Leistungsbilanz nach Q
     Q_sol = float(np.array(sp.solve(F_Q, Q)))
@@ -279,27 +279,28 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi):
             Q_sen_red = 0
 
         # Q_Konvektion
-        if kon is True:
-            Q_kon_red = alpha_kon_Bentz(u_inf) * (Theta_surf_ - Theta_inf) * A_he
+        if con is True:
+            Q_con_red = alpha_kon_Bentz(u_inf) * (Theta_surf_ - Theta_inf) * A_he
         else:
-            Q_kon_red = 0
+            Q_con_red = 0
 
         # Q_Strahlung
-        if sstr is True:  # Theta_surf_0 statt Theta_surf_, da sonst 4 Nullstellen
-            Q_str_red = sigma * epsilon_surf('Beton') * ((Theta_surf_0 + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
+        if rad is True:  # Theta_surf_0 statt Theta_surf_, da sonst 4 Nullstellen
+            Q_rad_red = sigma * epsilon_surf('Beton') * ((Theta_surf_0 + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
         else:
-            Q_str_red = 0
+            Q_rad_red = 0
 
-        # Q_Verdunstung
-        if eva is True:
-            if Theta_surf_0 > 0:  # bei Oberflächentemp. <= 0 °C keine Verdunstung
-                Q_eva_red = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_surf_0, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
-            else:
-                Q_eva_red = 0
-        else:
-            Q_eva_red = 0
+        # Q_Verdunstung (noch instabil)
+        # if eva is True:
+        #     if Theta_surf_0 > 0:  # bei Oberflächentemp. <= 0 °C keine Verdunstung
+        #         Q_eva_red = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_surf_0, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
+        #     else:
+        #         Q_eva_red = 0
+        # else:
+        #     Q_eva_red = 0
+        Q_eva_red = 0
 
-        F_Q_red = sp.Eq(Q_lat_red + Q_sen_red + R_f * (Q_kon_red + Q_str_red + Q_eva_red), 0)
+        F_Q_red = sp.Eq(Q_lat_red + Q_sen_red + R_f * (Q_con_red + Q_rad_red + Q_eva_red), 0)
         
         Theta_surf_sol = float(np.array(sp.solve(F_Q_red, Theta_surf_)))
     

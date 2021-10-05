@@ -23,7 +23,7 @@ alpha_Bentz_vec = np.zeros(num)
 
 for i,j in enumerate(Re_vec):
     alpha_Bentz_vec[i] = alpha_kon_Bentz(j * theta_l)
-    alpha_VDI_vec[i] = alpha_kon_VDI(1, j * theta_l, -5, 0)
+    alpha_VDI_vec[i] = alpha_kon_VDI(10, j * theta_l, -5, 0)
     
 
 fig = plt.figure()
@@ -35,7 +35,8 @@ ax.set_ylabel('alpha [W/m²K]')
 
 ax.grid('on')
 
-ax.legend(['alpha_VDI = fct(A_Heizelement = 1 m², u_inf, T_inf = -5 °C, T_o = 0 °C)', 'alpha_Bentz = fct(u_inf)'])
+ax.legend(['alpha_VDI = fct(A = 10 m², u_inf, T_inf = -5 °C, T_o = 0 °C)', 'alpha_Bentz = fct(u_inf)'], 
+          prop={'size': 10}, loc='upper left')
 
 ax.set_xscale('log')
 

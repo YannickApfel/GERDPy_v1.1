@@ -51,7 +51,7 @@ def main():
     H_field = boreholes.length_field(boreField)
 
     # Layout-Plot des Erdwärmesondenfelds
-    boreholes.visualize_field(boreField)
+    # boreholes.visualize_field(boreField)
 
     # 1.3) Bohrloch
 
@@ -72,12 +72,12 @@ def main():
     hp = heatpipes.Heatpipes(N, r_b, r_w, r_pa, r_iso, r_pi, lambda_b,
                              lambda_iso, lambda_p)
     # Layout-Plot der Wärmerohrkonfiguration
-    hp.visualize_hp_config()
+    # hp.visualize_hp_config()
 
     # 1.4) Heizelement
 
     # Fläche Heizelement [m2]
-    A_he = 10
+    A_he = 35
 
     # minimaler Oberflächenabstand [mm]
     x_min = 15
@@ -208,7 +208,7 @@ def main():
     # ax1.set_xlabel(r'$t$ [h]')
     ax1.set_ylabel(r'$Q$ [W]')
     hours = np.array([(j+1)*dt/3600. for j in range(Nt)])
-    ax1.plot(hours, Q, 'b-', lw=1.5)  # plot
+    ax1.plot(hours, Q, 'b-', lw=0.6)  # plot
     ax1.legend(['Entzugsleistung [W]'],
                prop={'size': font['size'] - 5}, loc='upper right')
     ax1.grid('major')
@@ -218,8 +218,8 @@ def main():
     ax2.set_xlabel(r'$t$ [h]')
     ax2.set_ylabel(r'$T$ [°C]')
     # plots
-    ax2.plot(hours, Theta_b, 'r-', lw=2.0)
-    ax2.plot(hours, Theta_surf, 'c-', lw=1.0)
+    ax2.plot(hours, Theta_b, 'r-', lw=1.2)
+    ax2.plot(hours, Theta_surf, 'c-', lw=0.6)
     ax2.legend(['T_Bohrlochrand', 'T_Oberfläche'],
                prop={'size': font['size'] - 5}, loc='upper right')
     ax2.grid('major')
