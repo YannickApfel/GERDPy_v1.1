@@ -22,7 +22,6 @@ from scipy.constants import pi
 
 # import GERDPy-modules
 import boreholes, heatpipes, heating_element, gfunction, load_aggregation
-from load_generator_synthetic import synthetic_load
 from load_generator import *
 from weather_data import get_weather_data
 from geometrycheck import check_geometry
@@ -77,7 +76,7 @@ def main():
     # 1.4) Heizelement
 
     # Fläche Heizelement [m2]
-    A_he = 35
+    A_he = 1
 
     # minimaler Oberflächenabstand [mm]
     x_min = 15
@@ -139,7 +138,7 @@ def main():
     # -------------------------------------------------------------------------
 
     # Import Wetterdaten aus weather_data.py
-    u_inf, Theta_inf, S_w, B, Phi = get_weather_data(Nt)
+    u_inf, Theta_inf, S_w, B, Phi, RR = get_weather_data(Nt)
     ''' u_inf - Windgeschwindigkeit [m/s]
         Theta_inf - Umgebungstemperatur [°C]
         S_w - Schneefallrate (Wasserequivalent) [mm/s]
@@ -157,7 +156,11 @@ def main():
     # Initialisierung Temperaturvektoren (ein Eintrag pro Zeitschritt)
     Theta_b = np.zeros(Nt)      # Bohrlochrand
     Theta_surf = np.zeros(Nt)   # Oberfläche Heizelement
+    
+    # Initialisierung Vektor für Restwassermenge
+    m_Rw = np.zeros(Nt)
 
+    # Initialisierung Entnahmeleistung
     Q = np.zeros(Nt)
 
     print('Simulating...')
@@ -169,14 +172,12 @@ def main():
         i += 1
         LoadAgg.next_time_step(time)
 
-        # Q[i] = synthetic_load(time/3600.)
-
-        # Ermittlung der Entzugsleistung
-        if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g für ersten Zeitschritt
-            Q[i], net_neg, Theta_surf[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, R_th, Theta_g, B[i], Phi[i])
+        # Ermittlung der Entzugsleistung im 1. Zeitschritt
+        if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g, Heizelementoberfläche trocken
+            Q[i], net_neg, Theta_surf[i], m_Rw[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, R_th, Theta_g, B[i], Phi[i], RR[i], 0)
 
         if i > 0:  # alle weiteren Zeitschritte (ermittelte Bodentemperatur)
-            Q[i], net_neg, Theta_surf[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], R_th, Theta_surf[i-1], B[i], Phi[i])
+            Q[i], net_neg, Theta_surf[i], m_Rw[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], R_th, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1])
 
         # Aufprägung der ermittelten Entzugsleistung mit 'load_aggregation.py'
         LoadAgg.set_current_load(Q[i]/H_field)
@@ -206,10 +207,10 @@ def main():
     # Lastprofil (thermische Leistung Q. über die Simulationsdauer)
     ax1 = fig.add_subplot(211)
     # ax1.set_xlabel(r'$t$ [h]')
-    ax1.set_ylabel(r'$Q$ [W]')
+    ax1.set_ylabel(r'$q$ [W/m²]')
     hours = np.array([(j+1)*dt/3600. for j in range(Nt)])
-    ax1.plot(hours, Q, 'b-', lw=0.6)  # plot
-    ax1.legend(['Entzugsleistung [W]'],
+    ax1.plot(hours, Q / A_he, 'b-', lw=0.6)  # plot
+    ax1.legend(['spezifische Entzugsleistung [W/m²]'],
                prop={'size': font['size'] - 5}, loc='upper right')
     ax1.grid('major')
 

@@ -23,12 +23,12 @@ alpha_Bentz_vec = np.zeros(num)
 
 for i,j in enumerate(Re_vec):
     alpha_Bentz_vec[i] = alpha_kon_Bentz(j * theta_l)
-    alpha_VDI_vec[i] = alpha_kon_VDI(10, j * theta_l, -5, 0)
+    # alpha_VDI_vec[i] = alpha_kon_VDI(10, j * theta_l, -5, 0)
     
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.plot(Re_vec, alpha_VDI_vec)
+# ax.plot(Re_vec, alpha_VDI_vec)
 ax.plot(Re_vec, alpha_Bentz_vec)
 ax.set_xlabel('Re [-]')
 ax.set_ylabel('alpha [W/m²K]')
@@ -67,20 +67,20 @@ h_NHN = 520
 u_inf = np.array([5, 3, 1])
 Phi = np.array([0.51, 0.75])
 
-T_inf_vec = np.linspace(-11, 0, num=50)
-erg1 = np.zeros(50)
-erg2 = np.zeros(50)
-erg3 = np.zeros(50)
-erg4 = np.zeros(50)
-erg5 = np.zeros(50)
-erg6 = np.zeros(50)
-for i,j in enumerate(T_inf_vec):
-    erg1[i] = load(h_NHN, u_inf[0], j, 2, 1, 0, 0, 0, 0.125, Phi[0])
-    erg2[i] = load(h_NHN, u_inf[0], j, 2, 1, 0, 0, 0, 0.125, Phi[1])
-    erg3[i] = load(h_NHN, u_inf[1], j, 2, 1, 0, 0, 0, 0.125, Phi[0])
-    erg4[i] = load(h_NHN, u_inf[1], j, 2, 1, 0, 0, 0, 0.125, Phi[1])
-    erg5[i] = load(h_NHN, u_inf[2], j, 2, 1, 0, 0, 0, 0.125, Phi[0])
-    erg6[i] = load(h_NHN, u_inf[2], j, 2, 1, 0, 0, 0, 0.125, Phi[1])
+T_inf_vec = np.linspace(-12, 0, num=50)
+erg1 = np.zeros(len(T_inf_vec))
+erg2 = np.zeros(len(T_inf_vec))
+erg3 = np.zeros(len(T_inf_vec))
+erg4 = np.zeros(len(T_inf_vec))
+erg5 = np.zeros(len(T_inf_vec))
+erg6 = np.zeros(len(T_inf_vec))
+for i, j in enumerate(T_inf_vec):
+    erg1[i] = load(h_NHN, u_inf[0], j, 2, 1, 0, 0, 0, 0.125, Phi[0])[0]
+    erg2[i] = load(h_NHN, u_inf[0], j, 2, 1, 0, 0, 0, 0.125, Phi[1])[0]
+    erg3[i] = load(h_NHN, u_inf[1], j, 2, 1, 0, 0, 0, 0.125, Phi[0])[0]
+    erg4[i] = load(h_NHN, u_inf[1], j, 2, 1, 0, 0, 0, 0.125, Phi[1])[0]
+    erg5[i] = load(h_NHN, u_inf[2], j, 2, 1, 0, 0, 0, 0.125, Phi[0])[0]
+    erg6[i] = load(h_NHN, u_inf[2], j, 2, 1, 0, 0, 0, 0.125, Phi[1])[0]
     
 plt.plot(T_inf_vec, erg1)
 plt.plot(T_inf_vec, erg2)
@@ -89,6 +89,6 @@ plt.plot(T_inf_vec, erg4)
 plt.plot(T_inf_vec, erg5)
 plt.plot(T_inf_vec, erg6)
 
-ax.legend(['u=5, Phi=0.51', 'u=5, Phi=0.75', 'u=3, Phi=0.51', 'u=3, Phi=0.75', 'u=1, Phi=0.75', 'u=1, Phi=0.51',
+ax.legend(['u=5, Phi=0.51', 'u=5, Phi=0.75', 'u=3, Phi=0.51', 'u=3, Phi=0.75', 'u=1, Phi=0.51', 'u=1, Phi=0.75',
          'u=1, Phi=0.75'])
 plt.grid()

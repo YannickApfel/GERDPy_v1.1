@@ -35,9 +35,7 @@ c_p_s = 2.04e3  # spez. Wärmekapazität Eis / Schnee (bei 0 °C) [J/kgK]
 c_p_w = 4212  # spez. Wärmekapazität Wasser (bei 0 °C) [J/kgK]
 c_p_l = 1006  # spez. Wärmekapazität Luft (bei 0 °C, 1 bar) [J/kgK]
 Theta_Schm = 0  # Schmelztemperatur von Eis / Schnee [°C]
-
-# b) Snow-free area ratio
-R_f = 0.5
+H_max = 2  # maximal erlaubte Wasserhöhe auf dem Heizelement [mm]
 
 
 # korrigierte Windgeschwindigkeit (Wind-Shear)
@@ -67,76 +65,17 @@ def alpha_kon_Bentz(u):  # alpha [W/m²K]
     return alpha
 
 
-# Wärmeübergangskoeffizient
-# nach [VDI2013] (erwungene und freie Konvektion)
-# alpha = alpha(Pr, Gr, Re)
-def alpha_kon_VDI(A_he, u, Theta_inf, Theta_surf):  # alpha [W/m²K]
-
-    # 1.) elementare charakteristische Größen des Strömungsproblems: L_c, Pr, Re, Gr
-    L_c_er = math.sqrt(A_he)  # charakteristisches Längenmaß erzwungene Konvektion [m] (quadratisches He)
-    L_c_fr = A_he / (4 * math.sqrt(A_he))  # charakteristisches Längenmaß freie Konvektion [m] (quadratisches He)
-
-    Pr = theta_l / a_l  # Prandtl-Zahl für Luft
-    Re = u * L_c_er / theta_l  # Reynolds-Zahl (Turbulenzmaß für erzwungene Konvektion)
-
-    Gr = L_c_fr ** 3 * 9.81 * beta(Theta_inf) * (Theta_surf - Theta_inf) / (theta_l ** 2)  # Grashof-Zahl (Turbulenzmaß für freie Konvektion)
-
-    # 2.) Verhältnis (Gr:Re²) als Kriterium für die Fallunterscheidung nach: freier Konvektion, Mischkonvektion, erzwungener Konvektion
-    if (Gr / (Re ** 2)) > 10:  # nur freie Konvektion: Vernachlässigung erzwungene Konvektion
-        con_fr = 1
-        con_er = 0
-    elif (Gr / (Re ** 2)) < 0.1:  # nur erzwungene Konvektion: Vernachlässigung freie Konvektion
-        con_fr = 0
-        con_er = 1
-    else:  # Mischkonvektion
-        con_fr = 1
-        con_er = 1
-
-    if (con_fr == 1):  # nur freie Konvektion: Vernachlässigung erzwungene Konvektion
-        L_c = L_c_fr
-        Ra = Gr * Pr  # Rayleigh-Zahl
-        f1_Pr = (1 + (0.322 / Pr) ** (11 / 20)) ** (-20/11)  # Prandtl-Korrekturfaktor
-
-        if (Ra * f1_Pr) <= 7e4:
-            Nu_fr = 0.766 * (Ra * f1_Pr) ** (1/5)  # laminare Nusselt-Zahl (freie Konvektion)
-        else:
-            Nu_fr = 0.15 * (Ra * f1_Pr) ** (1/3)  # turbulente Nusselt-Zahl (freie Konvektion)
-
-        Nu = Nu_fr
-
-    if (con_er == 1):  # nur erzwungene Konvektion: Vernachlässigung freie Konvektion
-        L_c = L_c_er
-
-        Nu_er_lam = 0.664 * math.sqrt(Re) * Pr ** (1/3)  # laminare Nusselt-Zahl (erzwungene Konvektion)
-        Nu_er_tur = 0.037 * Re ** 0.8 * Pr / (1 + 2.443 * Re ** -0.1 * (Pr ** (2/3) - 1))  # turb. Nusselt-Zahl (erzwungene Konvektion) 
-
-        if ((50 < Re) and (Re < 10e7)) and ((0.5 < Pr) and (Pr < 2000)):  # Probe auf gültigen Bereich für Strömungsmilieu
-            Nu_er_0 = math.sqrt(Nu_er_lam ** 2 + Nu_er_tur ** 2)  # mittlere Nusselt-Zahl für Mischbedingungen
-        else:
-            print("Prandtl- und/oder Reynoldszahl nicht im gültigen Bereich")
-            sys.exit()
-
-        Nu_er = ((Theta_inf + 273.15) / (Theta_surf + 273.15)) ** 0.12 * Nu_er_0  # mittlere Nu - korrigiert für T-abhängige Stoffwerte
-        Nu = Nu_er
-
-    if (con_fr == 1 and con_er == 1):  # Mischkonvektion
-        L_c = L_c_er
-        L_c_mix = L_c_er  # Definition der char. Länge entspricht der der erzw. Konvektion (beide Konvektionsarten)
-        Gr_mix = L_c_mix ** 3 * 9.81 * beta(Theta_inf) * (Theta_surf - Theta_inf) / (theta_l ** 2)
-
-        if (0 < Pr) and (Pr < 100):  # Probe auf gültigen Bereich für Strömungsmilieu
-            Nu_fr_mix = ((Pr / 5) ** (1/5)) * (Pr ** 0.5) / (0.25 + 1.6 * Pr ** 0.5) * Gr_mix ** (1/5)
-        else:
-            print("Prandtl- und/oder Reynoldszahl nicht im gültigen Bereich")
-            sys.exit()
-
-        Nu_mix = (Nu_er ** (7/2) + Nu_fr_mix ** (7/2)) ** (2/7)
-        Nu = Nu_mix
-
-    # 3.) Ermittlung des WÜK [W/m²K]
-    alpha = (Nu * lambda_l) / L_c
-
-    return alpha
+# Wassermengen-Bilanz an Heizelement-Oberfläche (für Verdunstung)
+def m_Restwasser(m_Rw, RR, Q_eva, A_he):
+    if m_Rw < 0:  # Restwassermenge kann nicht geringer werden als 0
+        m_Rw_sol = 0
+    else:
+        m_Rw_sol = m_Rw + (RR * rho_w * 1) / 1000 - (Q_eva / h_Ph_lg) * 1000
+    
+    if (m_Rw_sol / (rho_w * A_he)) > (H_max / 1000):  # H_max deckelt die max. mögl. Wasserhöhe
+        m_Rw_sol = (H_max / 1000) * rho_w * A_he
+    
+    return m_Rw_sol
 
 
 # Emissionskoeffizient des Heizelements
@@ -193,7 +132,6 @@ def X_D_inf(Theta_inf, Phi, h_NHN):
     return 0.622 * p_D / (p_inf(h_NHN) - p_D)
 
 
-
 # Wasserdampfbeladung der gesättigten Luft bei Theta_surf [kg Dampf / kg Luft]
 def X_D_sat_surf(Theta_surf, h_NHN):
     # Sättigungsdampfdruck an der Heizelementoberfläche bei Theta_surf: p_D = p_s(Theta_surf)
@@ -205,14 +143,17 @@ def X_D_sat_surf(Theta_surf, h_NHN):
 
 
 # Definition & Bilanzierung der Einzellasten
-def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi):  # Theta_x_0: Temp. des vorhergehenden Zeitschritts
+def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, RR, m_Rw_0):  # Theta_x_0: Temp. des vorhergehenden Zeitschritts
                                                                    # Input-Temperaturen in [°C]
         
-    # 0.) Reduzierte Windgeschwindigkeit (logarithmisches Windprofil)
-    u_inf = u_eff(v)
-                                                                   
-    # 0.)
+    # 0.) Preprocessing
+    u_inf = u_eff(v)  # Reduzierte Windgeschwindigkeit (logarithmisches Windprofil)
     Q = sp.symbols('Q')  # thermische Leistung Q als Variable definieren
+    
+    if Theta_surf_0 < 0 and S_w > 0:  # snow-free area ratio dynamisch
+        R_f = 0.25  # Schneedecke bildet sich, Schnee nicht ganz "ideal isolierend"
+    else:
+        R_f = 1  # Oberfläche ist schnee-frei (alle Verlustmechanismen treffen maximal ein)
     
     # 1.) Teil-Wärmeströme aktivieren oder deaktivieren (für unit-testing))
     lat = True
@@ -246,31 +187,37 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi):
         Q_rad = 0
 
     # Q_Verdunstung
-    if eva is True:  # Theta_surf_0 statt Theta_b_0 - Q * R_th
-        if Theta_surf_0 > 0:  # bei Oberflächentemp. <= 0 °C keine Verdunstung
-            Q_eva = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_surf_0, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
-        else:
-            Q_eva = 0
+    ''' Voraussetzungen: 
+            - Theta_surf >= 0 °C
+            - Oberfläche ist nass (Abfrage der Restwassermenge m_Rw)
+    '''    
+    if (eva is True and Theta_surf_0 >= 0 and m_Rw_0 > 0):
+        Q_eva = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_surf_0, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
     else:
         Q_eva = 0
+        
+    if Q_eva < 0:  # Verdunstungswärmestrom ist definitorisch positiv! <--> Kondensation wird vernachlässigt
+        Q_eva = 0
+
+    # Ermittlung Restwassermenge
+    m_Rw_1 = m_Restwasser(m_Rw_0, RR, Q_eva, A_he)
 
     # 2.) stationäre Leistungbilanz am Heizelement (Kopplung Oberfläche mit Erdboden)
     F_Q = sp.Eq(Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva) - Q, 0)
 
     # 3.) Auflösung der Leistungsbilanz nach Q
     Q_sol = float(np.array(sp.solve(F_Q, Q)))
+    
+    # 4.) Neuermittlung der Oberflächentemperatur (reduzierte Leistungsbilanz), falls Leistung negativ (Umgebung erwärmt Heizelement)
     net_neg = False  # Variable zur Übergabe an _main
     Theta_surf_sol = 0  # Initialisierung der neuen Oberflächentemperatur
     
-    if Q_sol < 0:  # Neuermittlung der Oberflächentemperatur (reduzierte Leistungsbilanz), falls Leistung negativ (Umgebung erwärmt Heizelement)
+    if Q_sol < 0:
         net_neg = True  # im Falle eines negativen Wärmestroms wahr
         Theta_surf_ = sp.symbols('Theta_surf_')  # Oberflächentemperatur als Variable definieren
 
         # Q_latent
-        if lat is True:
-            Q_lat_red = Q_lat
-        else:
-            Q_lat_red = 0
+        Q_lat_red = Q_lat
 
         # Q_sensibel
         if sen is True:
@@ -290,16 +237,10 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi):
         else:
             Q_rad_red = 0
 
-        # Q_Verdunstung (noch instabil)
-        # if eva is True:
-        #     if Theta_surf_0 > 0:  # bei Oberflächentemp. <= 0 °C keine Verdunstung
-        #         Q_eva_red = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_surf_0, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
-        #     else:
-        #         Q_eva_red = 0
-        # else:
-        #     Q_eva_red = 0
-        Q_eva_red = 0
+        # Q_Verdunstung
+        Q_eva_red = Q_eva
 
+        # reduzierte Leistungsbilanz
         F_Q_red = sp.Eq(Q_lat_red + Q_sen_red + R_f * (Q_con_red + Q_rad_red + Q_eva_red), 0)
         
         Theta_surf_sol = float(np.array(sp.solve(F_Q_red, Theta_surf_)))
@@ -308,4 +249,4 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi):
     if Q_sol < 0:  # Q. < 0 bei Gravitationswärmerohren nicht möglich
         Q_sol = 0
 
-    return Q_sol, net_neg, Theta_surf_sol
+    return Q_sol, net_neg, Theta_surf_sol, m_Rw_1
