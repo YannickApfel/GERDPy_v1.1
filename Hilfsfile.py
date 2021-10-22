@@ -75,12 +75,12 @@ erg4 = np.zeros(len(T_inf_vec))
 erg5 = np.zeros(len(T_inf_vec))
 erg6 = np.zeros(len(T_inf_vec))
 for i, j in enumerate(T_inf_vec):
-    erg1[i] = load(h_NHN, u_inf[0], j, 2, 1, 0, 0, 0, 0.125, Phi[0])[0]
-    erg2[i] = load(h_NHN, u_inf[0], j, 2, 1, 0, 0, 0, 0.125, Phi[1])[0]
-    erg3[i] = load(h_NHN, u_inf[1], j, 2, 1, 0, 0, 0, 0.125, Phi[0])[0]
-    erg4[i] = load(h_NHN, u_inf[1], j, 2, 1, 0, 0, 0, 0.125, Phi[1])[0]
-    erg5[i] = load(h_NHN, u_inf[2], j, 2, 1, 0, 0, 0, 0.125, Phi[0])[0]
-    erg6[i] = load(h_NHN, u_inf[2], j, 2, 1, 0, 0, 0, 0.125, Phi[1])[0]
+    erg1[i] = load(h_NHN, u_inf[0], j, 2, 1, 0, 0, 0, 0.125, Phi[0], 2, 1)[0]
+    erg2[i] = load(h_NHN, u_inf[0], j, 2, 1, 0, 0, 0, 0.125, Phi[1], 2, 1)[0]
+    erg3[i] = load(h_NHN, u_inf[1], j, 2, 1, 0, 0, 0, 0.125, Phi[0], 2, 1)[0]
+    erg4[i] = load(h_NHN, u_inf[1], j, 2, 1, 0, 0, 0, 0.125, Phi[1], 2, 1)[0]
+    erg5[i] = load(h_NHN, u_inf[2], j, 2, 1, 0, 0, 0, 0.125, Phi[0], 2, 1)[0]
+    erg6[i] = load(h_NHN, u_inf[2], j, 2, 1, 0, 0, 0, 0.125, Phi[1], 2, 1)[0]
     
 plt.plot(T_inf_vec, erg1)
 plt.plot(T_inf_vec, erg2)

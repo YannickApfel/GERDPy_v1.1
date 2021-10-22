@@ -156,10 +156,10 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
         R_f = 1  # Oberfläche ist schnee-frei (alle Verlustmechanismen treffen maximal ein)
     
     # 1.) Teil-Wärmeströme aktivieren oder deaktivieren (für unit-testing))
-    lat = True
-    sen = True
-    con = True
-    rad = True
+    lat = False
+    sen = False
+    con = False
+    rad = False
     eva = True
 
     # Q_latent
