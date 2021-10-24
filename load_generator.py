@@ -38,7 +38,7 @@ Theta_Schm = 0  # Schmelztemperatur von Eis / Schnee [°C]
 H_max = 2  # maximal erlaubte Wasserhöhe auf dem Heizelement [mm]
 
 
-# korrigierte Windgeschwindigkeit (Wind-Shear)
+# korrigierte Windgeschwindigkeit (Wind-Shear) [m/s]
 def u_eff(v):
     z_1 = 10  # Höhe, für die die Windgeschwindigkeit bekannt ist (Wetterdaten) [m]
     z_n = 1  # Bezugshöhe (liegt für das Problem definitorisch bei 1 m)
@@ -47,15 +47,39 @@ def u_eff(v):
     return v * (math.log10(z_n) - math.log10(z_0)) / (math.log10(z_1) - math.log10(z_0))
 
 
-# höhenkorrigierter Umgebungsdruck
+# höhenkorrigierter Umgebungsdruck [Pa]
 def p_inf(h_NHN):
     return 101325 * (1 - 0.0065 * h_NHN / 288.2) ** 5.265
 
+# Sättigungs-Dampfdruck nach ASHRAE2013 [Pa]
+def p_s(T):  # Input in [K]
+    C_1 = -5.6745359e3
+    C_2 = 6.3925247e0
+    C_3 = -9.6778430e-3
+    C_4 = 6.2215701e-7
+    C_5 = 2.0747825e-9
+    C_6 = -9.4840240e-13
+    C_7 = 4.1635019e0
+    C_8 = -5.8002206e3
+    C_9 = 1.3914993e0
+    C_10 = -4.8640239e-2
+    C_11 = 4.1764768e-5
+    C_12 = -1.4452093e-8
+    C_13 = 6.5459673e0
+    
+    if ((T - 273.15) > -100) and ((T - 273.15) < 0):  # "over ice"
+        return math.exp(C_1 / T + C_2 + C_3 * T + C_4 * T ** 2 + C_5 * T ** 3 + C_6 * T ** 4 + C_7 * math.log(T))
+    elif ((T - 273.15) >= 0) and ((T - 273.15) <= 200):  # "over liquid water"
+        return math.exp(C_8 / T + C_9 + C_10 * T + C_11 * T ** 2 + C_12 * T ** 3 + C_13 * math.log(T))
+    else:
+        print('Interner Fehler: erlaubter T-Bereich für Sättigungs-Dampfdruckformel nach ASHRAE2013 unter-/überschritten!')
+        sys.exit()
 
-# Wärmeübergangskoeffizient
+
+# Wärmeübergangskoeffizient [W/m²K]
 # nach [Bentz D. P. 2000] (nur erzwungene Konvektion)
 # alpha = alpha(u_air)
-def alpha_kon_Bentz(u):  # alpha [W/m²K]
+def alpha_kon_Bentz(u):
 
     if u <= 5:
         alpha = 5.6 + 4 * u
@@ -78,7 +102,7 @@ def m_Restwasser(m_Rw, RR, Q_eva, A_he):
     return m_Rw_sol
 
 
-# Emissionskoeffizient des Heizelements
+# Emissionskoeffizient des Heizelements [-]
 def epsilon_surf(material):
     if material == 'Beton':
         return 0.94
@@ -104,7 +128,7 @@ def T_MS(S_w, Theta_inf, B, Phi):
         return T_MS
     
     
-# binärer Diffusionskoeffizient
+# binärer Diffusionskoeffizient [-]
 def delta(Theta_inf, h_NHN):
 
     return (2.252 / p_inf(h_NHN)) * ((Theta_inf + 273.15) / 273.15) ** 1.81
@@ -124,10 +148,8 @@ def beta_c(Theta_inf, u, h_NHN):
 # Wasserdampfbeladung der gesättigten Luft bei Theta_inf [kg Dampf / kg Luft]
 def X_D_inf(Theta_inf, Phi, h_NHN):
     # Sättigungsdampfdruck in der Umgebung bei Taupunkttemperatur: p_D = p_s(T_tau(Theta_inf, Phi))
-        # der zul. Wertebereich von PropsSI aus CoolProp nicht ausreichend....
-        # ....Verwendung einer Korrelation für den Sättigungsdruck nach [Konrad2009, S. 79]
     T_tau = CP.HAPropsSI('DewPoint', 'T', (Theta_inf + 273.15), 'P', 101325, 'R', Phi)  # Input in [K]
-    p_D = 6.108 * math.exp((17.081 * (T_tau - 273.15)) / (234.175 + (T_tau - 273.15))) * 100  # Input in [°C]
+    p_D = p_s(T_tau)  # Input in [K]
     
     return 0.622 * p_D / (p_inf(h_NHN) - p_D)
 
@@ -135,9 +157,7 @@ def X_D_inf(Theta_inf, Phi, h_NHN):
 # Wasserdampfbeladung der gesättigten Luft bei Theta_surf [kg Dampf / kg Luft]
 def X_D_sat_surf(Theta_surf, h_NHN):
     # Sättigungsdampfdruck an der Heizelementoberfläche bei Theta_surf: p_D = p_s(Theta_surf)
-        # der zul. Wertebereich von PropsSI aus CoolProp nicht ausreichend....
-        # ....Verwendung einer Korrelation für den Sättigungsdruck nach [Konrad2009, S. 79]
-    p_D = 6.108 * math.exp((17.081 * Theta_surf) / (234.175 + Theta_surf)) * 100  # Input in [°C]
+    p_D = p_s(Theta_surf + 273.15)  # Input in [K]
 
     return 0.622 * p_D / (p_inf(h_NHN) - p_D)
 
