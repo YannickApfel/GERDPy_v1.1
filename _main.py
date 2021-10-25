@@ -60,7 +60,7 @@ def main():
     r_w = 0.12                # Radius der Wärmerohr-Mittelpunkte [m]
     r_pa = 0.016                 # Außenradius der Isolationsschicht [m]
     r_iso = 0.016                # Innenradius der Isolationsschicht [m]
-    r_pi = 0.015                 # Innenradius des Wärmerohrs [m]
+    r_pi = 0.015                # Innenradius des Wärmerohrs [m]
 
     # Wärmeleitfähigkeiten
     lambda_b = 2                # lambda der Hinterfüllung [W/mK]
@@ -206,7 +206,7 @@ def main():
 
     # Lastprofil (thermische Leistung Q. über die Simulationsdauer)
     ax1 = fig.add_subplot(211)
-    # ax1.set_xlabel(r'$t$ [h]')
+    ax1.set_xlabel(r'$t$ [h]')
     ax1.set_ylabel(r'$q$ [W/m²]')
     hours = np.array([(j+1)*dt/3600. for j in range(Nt)])
     ax1.plot(hours, Q / A_he, 'b-', lw=0.6)  # plot
@@ -216,7 +216,6 @@ def main():
 
     # Temperaturverläufe
     ax2 = fig.add_subplot(212)
-    ax2.set_xlabel(r'$t$ [h]')
     ax2.set_ylabel(r'$T$ [°C]')
     # plots
     ax2.plot(hours, Theta_b, 'r-', lw=1.2)

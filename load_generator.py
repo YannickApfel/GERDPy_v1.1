@@ -35,7 +35,7 @@ c_p_s = 2.04e3  # spez. Wärmekapazität Eis / Schnee (bei 0 °C) [J/kgK]
 c_p_w = 4212  # spez. Wärmekapazität Wasser (bei 0 °C) [J/kgK]
 c_p_l = 1006  # spez. Wärmekapazität Luft (bei 0 °C, 1 bar) [J/kgK]
 Theta_Schm = 0  # Schmelztemperatur von Eis / Schnee [°C]
-H_max = 2  # maximal erlaubte Wasserhöhe auf dem Heizelement [mm]
+H_max = 1  # maximal erlaubte Wasserhöhe auf dem Heizelement [mm]
 
 
 # korrigierte Windgeschwindigkeit (Wind-Shear) [m/s]
@@ -94,7 +94,7 @@ def m_Restwasser(m_Rw, RR, Q_eva, A_he):
     if m_Rw < 0:  # Restwassermenge kann nicht geringer werden als 0
         m_Rw_sol = 0
     else:
-        m_Rw_sol = m_Rw + (RR * rho_w * 1) / 1000 - (Q_eva / h_Ph_lg) * 1000
+        m_Rw_sol = m_Rw + (RR * rho_w * 1) / 1000 - (Q_eva / h_Ph_lg) * 3600
     
     if (m_Rw_sol / (rho_w * A_he)) > (H_max / 1000):  # H_max deckelt die max. mögl. Wasserhöhe
         m_Rw_sol = (H_max / 1000) * rho_w * A_he
