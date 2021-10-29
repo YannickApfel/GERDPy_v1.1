@@ -76,7 +76,7 @@ def main():
     # 1.4) Heizelement
 
     # Fläche Heizelement [m2]
-    A_he = 1
+    A_he = 35
 
     # minimaler Oberflächenabstand [mm]
     x_min = 15
@@ -176,7 +176,7 @@ def main():
         if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g, Heizelementoberfläche trocken
             Q[i], net_neg, Theta_surf[i], m_Rw[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, R_th, Theta_g, B[i], Phi[i], RR[i], 0)
 
-        if i > 0:  # alle weiteren Zeitschritte (ermittelte Bodentemperatur)
+        if i > 0:  # alle weiteren Zeitschritte
             Q[i], net_neg, Theta_surf[i], m_Rw[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], R_th, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1])
 
         # Aufprägung der ermittelten Entzugsleistung mit 'load_aggregation.py'
@@ -209,10 +209,20 @@ def main():
     ax1.set_xlabel(r'$t$ [h]')
     ax1.set_ylabel(r'$q$ [W/m²]')
     hours = np.array([(j+1)*dt/3600. for j in range(Nt)])
-    ax1.plot(hours, Q / A_he, 'b-', lw=0.6)  # plot
+    ax1.plot(hours, Q / A_he, 'k-', lw=0.6)  # plot
     ax1.legend(['spezifische Entzugsleistung [W/m²]'],
                prop={'size': font['size'] - 5}, loc='upper right')
     ax1.grid('major')
+    
+    # Wasserbilanzlinie (entspr. Wasserhöhe an der Oberfläche)
+    ax1_secondaxis = ax1.twinx()
+    ax1_secondaxis.plot(hours, m_Rw / A_he, 'b-', lw=0.5)
+    ax1_secondaxis.set_ylabel(r'$m_Rw$ [mm]')
+    ax1_secondaxis.set_ylim([0, 1.1])
+    ax1_secondaxis.legend(['Wasserhöhe [mm]'],
+                prop={'size': font['size'] - 5}, loc='upper left')
+    
+    ax1_secondaxis.set_yticks(np.linspace(ax1_secondaxis.get_yticks()[0], ax1_secondaxis.get_yticks()[-1], len(ax1.get_yticks())))  # align gridlines
 
     # Temperaturverläufe
     ax2 = fig.add_subplot(212)
@@ -229,8 +239,7 @@ def main():
     ax1.yaxis.set_minor_locator(AutoMinorLocator())
     ax2.xaxis.set_minor_locator(AutoMinorLocator())
     ax2.yaxis.set_minor_locator(AutoMinorLocator())
-    # Fenstergröße anpassen
-    # plt.tight_layout()
+    # plt.tight_layout()  # Fenstergröße anpassen
 
     return
 

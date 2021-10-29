@@ -25,15 +25,14 @@ from scipy.constants import sigma
 # a) Stoffwerte
 lambda_l = 0.0262  # Wärmeleitfähigkeit von Luft (Normbedingungen) [W/m*K]
 a_l = lambda_l / (1.293 * 1005)  # T-Leitfähigkeit von Luft (Normbedingungen) [m²/s]
-beta = lambda Theta_inf: 1 / (Theta_inf + 273.15)  # isobarer therm. Ausdehnungskoeffizient f. ideale Gase [1/K]
 theta_l = 13.3e-6   # kin. Vis. von Luft [m²/s]
 rho_w = 997  # Dichte von Wasser (bei 25 °C) [kg/m³]
-rho_l = 1.276  # Dichte trockener Luft (bei 0 °C, 1 bar) [kg/m³]
+rho_l = 1.33  # Dichte trockener Luft (bei 0 °C, 1 bar) [kg/m³]
 h_Ph_sl = 333e3  # Phasenwechselenthalpie Schnee <=> Wasser [J/kg]
-h_Ph_lg = 2256.6e3  # Phasenwechselenthalpie Wasser <=> Dampf [J/kg]
+h_Ph_lg = 2499e3  # Phasenwechselenthalpie Wasser <=> Dampf [J/kg]
 c_p_s = 2.04e3  # spez. Wärmekapazität Eis / Schnee (bei 0 °C) [J/kgK]
 c_p_w = 4212  # spez. Wärmekapazität Wasser (bei 0 °C) [J/kgK]
-c_p_l = 1006  # spez. Wärmekapazität Luft (bei 0 °C, 1 bar) [J/kgK]
+c_p_l = 1005  # spez. Wärmekapazität Luft (bei 0 °C, 1 bar) [J/kgK]
 Theta_Schm = 0  # Schmelztemperatur von Eis / Schnee [°C]
 H_max = 1  # maximal erlaubte Wasserhöhe auf dem Heizelement [mm]
 
@@ -80,12 +79,11 @@ def p_s(T):  # Input in [K]
 # nach [Bentz D. P. 2000] (nur erzwungene Konvektion)
 # alpha = alpha(u_air)
 def alpha_kon_Bentz(u):
-
     if u <= 5:
         alpha = 5.6 + 4 * u
     else:
         alpha = 7.2 * u ** 0.78
-
+    
     return alpha
 
 
@@ -165,7 +163,6 @@ def X_D_sat_surf(Theta_surf, h_NHN):
 # Definition & Bilanzierung der Einzellasten
 def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, RR, m_Rw_0):  # Theta_x_0: Temp. des vorhergehenden Zeitschritts
                                                                    # Input-Temperaturen in [°C]
-        
     # 0.) Preprocessing
     u_inf = u_eff(v)  # Reduzierte Windgeschwindigkeit (logarithmisches Windprofil)
     Q = sp.symbols('Q')  # thermische Leistung Q als Variable definieren
