@@ -88,17 +88,29 @@ def alpha_kon_Bentz(u):
 
 
 # Wassermengen-Bilanz an Heizelement-Oberfläche (für Verdunstung)
-def m_Restwasser(m_Rw, RR, Q_eva, A_he):
-    if m_Rw < 0:  # Restwassermenge kann nicht geringer werden als 0
-        m_Rw_sol = 0
-    else:
-        m_Rw_sol = m_Rw + (RR * rho_w * 1) / 1000 - (Q_eva / h_Ph_lg) * 3600
-    
-    if (m_Rw_sol / (rho_w * A_he)) > (H_max / 1000):  # H_max deckelt die max. mögl. Wasserhöhe
-        m_Rw_sol = (H_max / 1000) * rho_w * A_he
-    
-    return m_Rw_sol
+def m_Restwasser(m_Rw_0, RR, A_he, Q_eva):
+    m_Rw_1 = m_Rw_0 + (RR * rho_w * A_he) / 1000 - (Q_eva / h_Ph_lg) * 3600
 
+    if (m_Rw_1 / (rho_w * A_he)) > (H_max / 1000):  # H_max deckelt die max. mögl. Wasserhöhe
+        m_Rw_1 = (H_max / 1000) * rho_w * A_he
+
+    if m_Rw_1 < 0:  # Restwassermenge kann nicht geringer werden als 0
+        m_Rw_1 = 0
+    
+    return m_Rw_1
+
+
+# Schneemengen-Bilanz an Heizelement-Oberfläche
+# def m_Restschnee(m_Rs_0, S_w, A_he, Q_lat, ssb):
+#     if (m_Rs_0 > 0 or ssb == True):
+#         m_Rs_1 = m_Rs_0 + (S_w * rho_w * A_he) / 1000 - (Q_lat / h_Ph_sl) * 3600
+#     else:
+#         m_Rs_1 = 0
+
+#     if m_Rs_1 < 0:  # Restschneemenge kann nicht geringer werden als 0
+#         m_Rs_1 = 0
+    
+#     return m_Rs_1
 
 # Emissionskoeffizient des Heizelements [-]
 def epsilon_surf(material):
@@ -161,7 +173,7 @@ def X_D_sat_surf(Theta_surf, h_NHN):
 
 
 # Definition & Bilanzierung der Einzellasten
-def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, RR, m_Rw_0):  # Theta_x_0: Temp. des vorhergehenden Zeitschritts
+def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, RR, m_Rw_0, m_Rs_0, ssb):  # Theta_x_0: Temp. des vorhergehenden Zeitschritts
                                                                    # Input-Temperaturen in [°C]
     # 0.) Preprocessing
     u_inf = u_eff(v)  # Reduzierte Windgeschwindigkeit (logarithmisches Windprofil)
@@ -187,7 +199,10 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
 
     # Q_sensibel
     if sen is True:
-        Q_sen = rho_w * S_w * (c_p_s * (Theta_Schm - Theta_inf) + c_p_w * (Theta_b_0 - Q * R_th - Theta_Schm)) * (3.6e6)**-1 * A_he
+        if (m_Rs_0 > 0 or ssb == True):  # Schneedecke vorhanden (Schnee wird nur bis Theta_Schm erwärmt)
+            Q_sen = rho_w * S_w * (c_p_s * (Theta_Schm - Theta_inf)) * (3.6e6)**-1 * A_he
+        else:  # Schneedecke nicht vorhanden
+            Q_sen = rho_w * S_w * (c_p_s * (Theta_Schm - Theta_inf) + c_p_w * (Theta_b_0 - Q * R_th - Theta_Schm)) * (3.6e6)**-1 * A_he
     else:
         Q_sen = 0
 
@@ -212,12 +227,15 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
         Q_eva = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_surf_0, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
     else:
         Q_eva = 0
-        
+
     if Q_eva < 0:  # Verdunstungswärmestrom ist definitorisch positiv! <--> Kondensation wird vernachlässigt
         Q_eva = 0
 
     # Ermittlung Restwassermenge
-    m_Rw_1 = m_Restwasser(m_Rw_0, RR, Q_eva, A_he)
+    m_Rw_1 = m_Restwasser(m_Rw_0, RR, A_he, Q_eva)
+    
+    # Ermittlung Restschneemenge
+    # m_Rs_1 = m_Restschnee(m_Rs_0, S_w, A_he, Q_lat, ssb)
 
     # 2.) stationäre Leistungbilanz am Heizelement (Kopplung Oberfläche mit Erdboden)
     F_Q = sp.Eq(Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva) - Q, 0)
@@ -235,12 +253,15 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
 
         # Q_latent
         Q_lat_red = Q_lat
-
+            
         # Q_sensibel
         if sen is True:
-            Q_sen_red = rho_w * S_w * (c_p_s * (Theta_Schm - Theta_inf) + c_p_w * (Theta_surf_ - Theta_Schm)) * (3.6e6)**-1 * A_he
+            if (m_Rs_0 > 0 or ssb == True):  # Schneedecke vorhanden (Schnee wird nur bis Theta_Schm erwärmt)
+                Q_sen_red = rho_w * S_w * (c_p_s * (Theta_Schm - Theta_inf)) * (3.6e6)**-1 * A_he
+            else:  # Schneedecke nicht vorhanden
+                Q_sen_red = rho_w * S_w * (c_p_s * (Theta_Schm - Theta_inf) + c_p_w * (Theta_surf_ - Theta_Schm)) * (3.6e6)**-1 * A_he
         else:
-            Q_sen_red = 0
+            Q_sen = 0
 
         # Q_Konvektion
         if con is True:
@@ -266,4 +287,4 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
     if Q_sol < 0:  # Q. < 0 bei Gravitationswärmerohren nicht möglich
         Q_sol = 0
 
-    return Q_sol, net_neg, Theta_surf_sol, m_Rw_1
+    return Q_sol, net_neg, Theta_surf_sol, m_Rw_1, # m_Rs_1

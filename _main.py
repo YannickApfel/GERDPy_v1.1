@@ -76,7 +76,7 @@ def main():
     # 1.4) Heizelement
 
     # Fläche Heizelement [m2]
-    A_he = 35
+    A_he = 1
 
     # minimaler Oberflächenabstand [mm]
     x_min = 15
@@ -91,7 +91,7 @@ def main():
 
     # Simulationsparameter
     dt = 3600.                           # Zeitschrittweite [s]
-    tmax = 1 * 12 * (8760./12) * 3600.    # Gesamt-Simulationsdauer [s]
+    tmax = 0.25 * 1 * (8760./12) * 3600.    # Gesamt-Simulationsdauer [s]
     # tmax = 100 * 3600.
     Nt = int(np.ceil(tmax/dt))           # Anzahl Zeitschritte [-]
 
@@ -152,13 +152,21 @@ def main():
 
     time = 0.
     i = -1
+    start_sb = False  # sb - snow balancing
 
-    # Initialisierung Temperaturvektoren (ein Eintrag pro Zeitschritt)
+    # Initialisierung Temperaturen
+    ''' Vektoren:
+            Q[i] - Entzugsleistung f. Zeitschritt i 
+            Theta_surf[i] - Oberflächentemp. f. Zeitschritt i
+    '''
     Theta_b = np.zeros(Nt)      # Bohrlochrand
     Theta_surf = np.zeros(Nt)   # Oberfläche Heizelement
     
     # Initialisierung Vektor für Restwassermenge
     m_Rw = np.zeros(Nt)
+    
+    # Initialisierung Vektor für Restschneemenge
+    m_Rs = np.zeros(Nt)
 
     # Initialisierung Entnahmeleistung
     Q = np.zeros(Nt)
@@ -168,16 +176,22 @@ def main():
     while time < tmax:  # Iterationsschleife (ein Durchlauf pro Zeitschritt)
 
         # Zeitschritt um 1 inkrementieren
-        time += dt
-        i += 1
+        if start_sb == False:
+            time += dt
+            i += 1
+
         LoadAgg.next_time_step(time)
 
         # Ermittlung der Entzugsleistung im 1. Zeitschritt
-        if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g, Heizelementoberfläche trocken
-            Q[i], net_neg, Theta_surf[i], m_Rw[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, R_th, Theta_g, B[i], Phi[i], RR[i], 0)
+        if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g, Heizelementoberfläche trocken und Schnee-frei
+            Q[i], net_neg, Theta_surf[i], m_Rw[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, 
+                                                         R_th, Theta_g, B[i], Phi[i], RR[i], 0, 0, start_sb)
 
-        if i > 0:  # alle weiteren Zeitschritte
-            Q[i], net_neg, Theta_surf[i], m_Rw[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], R_th, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1])
+        if i > 0:  # alle weiteren Zeitschritte (ermittelte Bodentemperatur)
+            Q[i], net_neg, Theta_surf[i], m_Rw[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], 
+                                                         R_th, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1], m_Rs[i-1], start_sb)
+            
+        start_sb = False  # Variable Start Schneebilanzierung zurücksetzen
 
         # Aufprägung der ermittelten Entzugsleistung mit 'load_aggregation.py'
         LoadAgg.set_current_load(Q[i]/H_field)
@@ -189,6 +203,18 @@ def main():
         # Temperatur an der Oberfläche des Heizelements
         if net_neg == False:
             Theta_surf[i] = Theta_b[i] - Q[i] * R_th
+
+        # Schneebilanzierung starten
+        ''' Zeitschritt wird einmalig wiederholt, falls sich eine Schneeschicht bildet:
+            - Theta_surf[i] < 0 und
+            - S_w[i] > 0
+            oder
+            - m_Rs[i] =0 (keine Restschneemenge vorhanden)
+            
+            => Schnee bleibt liegen: Schneebilanz an Oberfläche
+        '''
+        if (Theta_surf[i] < 0 and S_w[i] > 0 and m_Rs[i] == 0):
+            start_sb = True
 
     # -------------------------------------------------------------------------
     # 7.) Plots
@@ -222,7 +248,8 @@ def main():
     ax1_secondaxis.legend(['Wasserhöhe [mm]'],
                 prop={'size': font['size'] - 5}, loc='upper left')
     
-    ax1_secondaxis.set_yticks(np.linspace(ax1_secondaxis.get_yticks()[0], ax1_secondaxis.get_yticks()[-1], len(ax1.get_yticks())))  # align gridlines
+    ax1_secondaxis.set_yticks(np.linspace(ax1_secondaxis.get_yticks()[0], 
+                                          ax1_secondaxis.get_yticks()[-1], len(ax1.get_yticks())))  # align gridlines
 
     # Temperaturverläufe
     ax2 = fig.add_subplot(212)
