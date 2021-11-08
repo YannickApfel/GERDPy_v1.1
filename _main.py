@@ -76,7 +76,7 @@ def main():
     # 1.4) Heizelement
 
     # Fläche Heizelement [m2]
-    A_he = 1
+    A_he = 35
 
     # minimaler Oberflächenabstand [mm]
     x_min = 15
@@ -91,8 +91,7 @@ def main():
 
     # Simulationsparameter
     dt = 3600.                           # Zeitschrittweite [s]
-    tmax = 0.25 * 1 * (8760./12) * 3600.    # Gesamt-Simulationsdauer [s]
-    # tmax = 100 * 3600.
+    tmax = 1 * 12 * (8760./12) * 3600.    # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))           # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -173,8 +172,12 @@ def main():
 
     print('Simulating...')
 
+    count = -1
+
     while time < tmax:  # Iterationsschleife (ein Durchlauf pro Zeitschritt)
 
+        count += 1  # Anzahl durchlaufene Iterationen
+        
         # Zeitschritt um 1 inkrementieren
         if start_sb == False:
             time += dt
@@ -184,14 +187,14 @@ def main():
 
         # Ermittlung der Entzugsleistung im 1. Zeitschritt
         if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g, Heizelementoberfläche trocken und Schnee-frei
-            Q[i], net_neg, Theta_surf[i], m_Rw[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, 
+            Q[i], t_surf_calc, Theta_surf[i], m_Rw[i], m_Rs[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, 
                                                          R_th, Theta_g, B[i], Phi[i], RR[i], 0, 0, start_sb)
 
         if i > 0:  # alle weiteren Zeitschritte (ermittelte Bodentemperatur)
-            Q[i], net_neg, Theta_surf[i], m_Rw[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], 
+            Q[i], t_surf_calc, Theta_surf[i], m_Rw[i], m_Rs[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], 
                                                          R_th, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1], m_Rs[i-1], start_sb)
             
-        start_sb = False  # Variable Start Schneebilanzierung zurücksetzen
+        start_sb = False  # Variable Start-Schneebilanzierung zurücksetzen
 
         # Aufprägung der ermittelten Entzugsleistung mit 'load_aggregation.py'
         LoadAgg.set_current_load(Q[i]/H_field)
@@ -201,15 +204,14 @@ def main():
         Theta_b[i] = Theta_g - deltaTheta_b
 
         # Temperatur an der Oberfläche des Heizelements
-        if net_neg == False:
+        if t_surf_calc == False:
             Theta_surf[i] = Theta_b[i] - Q[i] * R_th
 
         # Schneebilanzierung starten
         ''' Zeitschritt wird einmalig wiederholt, falls sich eine Schneeschicht bildet:
-            - Theta_surf[i] < 0 und
-            - S_w[i] > 0
-            oder
-            - m_Rs[i] =0 (keine Restschneemenge vorhanden)
+            - Theta_surf[i] < 0 UND
+            - S_w[i] > 0 UND
+            - m_Rs[i]==0 (keine Restschneemenge vorhanden)
             
             => Schnee bleibt liegen: Schneebilanz an Oberfläche
         '''
@@ -229,43 +231,44 @@ def main():
 
     font = {'weight': 'bold', 'size': 22}
     plt.rc('font', **font)
+    
+    hours = np.array([(j+1)*dt/3600. for j in range(Nt)])
 
     # Lastprofil (thermische Leistung Q. über die Simulationsdauer)
-    ax1 = fig.add_subplot(211)
+    ax1 = fig.add_subplot(311)
     ax1.set_xlabel(r'$t$ [h]')
     ax1.set_ylabel(r'$q$ [W/m²]')
-    hours = np.array([(j+1)*dt/3600. for j in range(Nt)])
     ax1.plot(hours, Q / A_he, 'k-', lw=0.6)  # plot
     ax1.legend(['spezifische Entzugsleistung [W/m²]'],
                prop={'size': font['size'] - 5}, loc='upper right')
     ax1.grid('major')
     
-    # Wasserbilanzlinie (entspr. Wasserhöhe an der Oberfläche)
-    ax1_secondaxis = ax1.twinx()
-    ax1_secondaxis.plot(hours, m_Rw / A_he, 'b-', lw=0.5)
-    ax1_secondaxis.set_ylabel(r'$m_Rw$ [mm]')
-    ax1_secondaxis.set_ylim([0, 1.1])
-    ax1_secondaxis.legend(['Wasserhöhe [mm]'],
-                prop={'size': font['size'] - 5}, loc='upper left')
-    
-    ax1_secondaxis.set_yticks(np.linspace(ax1_secondaxis.get_yticks()[0], 
-                                          ax1_secondaxis.get_yticks()[-1], len(ax1.get_yticks())))  # align gridlines
+    # Wasser- und Schneebilanzlinie (entspr. Wasserhöhe an der Oberfläche)
+    ax2 = fig.add_subplot(312)
+    ax2.set_ylabel('Wasseräq. [mm]')
+    ax2.plot(hours, m_Rw / A_he, 'b-', lw=0.8)
+    ax2.plot(hours, m_Rs / A_he, 'g-', lw=0.8)
+    ax2.legend(['Wasserhöhe', 'Schneehöhe'],
+                          prop={'size': font['size'] - 5}, loc='upper left')
+    ax2.grid('major')
 
     # Temperaturverläufe
-    ax2 = fig.add_subplot(212)
-    ax2.set_ylabel(r'$T$ [°C]')
+    ax3 = fig.add_subplot(313)
+    ax3.set_ylabel(r'$T$ [°C]')
     # plots
-    ax2.plot(hours, Theta_b, 'r-', lw=1.2)
-    ax2.plot(hours, Theta_surf, 'c-', lw=0.6)
-    ax2.legend(['T_Bohrlochrand', 'T_Oberfläche'],
+    ax3.plot(hours, Theta_b, 'r-', lw=1.2)
+    ax3.plot(hours, Theta_surf, 'c-', lw=0.6)
+    ax3.legend(['T_Bohrlochrand', 'T_Oberfläche'],
                prop={'size': font['size'] - 5}, loc='upper right')
-    ax2.grid('major')
+    ax3.grid('major')
 
     # Beschriftung Achsenwerte
     ax1.xaxis.set_minor_locator(AutoMinorLocator())
     ax1.yaxis.set_minor_locator(AutoMinorLocator())
     ax2.xaxis.set_minor_locator(AutoMinorLocator())
     ax2.yaxis.set_minor_locator(AutoMinorLocator())
+    ax3.xaxis.set_minor_locator(AutoMinorLocator())
+    ax3.yaxis.set_minor_locator(AutoMinorLocator())
     # plt.tight_layout()  # Fenstergröße anpassen
 
     return
