@@ -97,7 +97,7 @@ def m_Restwasser(m_Rw_0, RR, A_he, Q_eva):
 
 # Schneemengen-Bilanz an Heizelement-Oberfläche
 def m_Restschnee(m_Rs_0, S_w, A_he, Q_lat, sb_active):
-    if (sb_active == True):
+    if (sb_active == 1):
         m_Rs_1 = m_Rs_0 + (S_w * rho_w * A_he) / 1000 - (Q_lat / h_Ph_sl) * 3600
     else:
         m_Rs_1 = 0

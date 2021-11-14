@@ -172,11 +172,11 @@ def main():
 
     print('Simulating...')
 
-    count = -1
+    # Hilfsgrößen
+    start_sb_counter = np.zeros(Nt)
+    sb_active = np.zeros(Nt)
 
     while time < tmax:  # Iterationsschleife (ein Durchlauf pro Zeitschritt)
-
-        count += 1  # Anzahl durchlaufene Iterationen
         
         # Zeitschritt um 1 inkrementieren
         if start_sb == False:
@@ -187,11 +187,11 @@ def main():
 
         # Ermittlung der Entzugsleistung im 1. Zeitschritt
         if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g, Heizelementoberfläche trocken und Schnee-frei
-            Q[i], t_surf_calc, Theta_surf[i], m_Rw[i], m_Rs[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, 
+            Q[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, 
                                                          R_th, Theta_g, B[i], Phi[i], RR[i], 0, 0, start_sb)
 
         if i > 0:  # alle weiteren Zeitschritte (ermittelte Bodentemperatur)
-            Q[i], t_surf_calc, Theta_surf[i], m_Rw[i], m_Rs[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], 
+            Q[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], 
                                                          R_th, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1], m_Rs[i-1], start_sb)
             
         start_sb = False  # Variable Start-Schneebilanzierung zurücksetzen
@@ -204,11 +204,11 @@ def main():
         Theta_b[i] = Theta_g - deltaTheta_b
 
         # Temperatur an der Oberfläche des Heizelements
-        if t_surf_calc == False:
+        if calc_T_surf == False:
             Theta_surf[i] = Theta_b[i] - Q[i] * R_th
 
         # Schneebilanzierung starten
-        ''' Zeitschritt wird einmalig wiederholt, falls sich eine Schneeschicht bildet:
+        ''' Zeitschritt wird einmalig wiederholt, falls sich eine Schneeschicht beginnt zu bilden:
             - Theta_surf[i] < 0 UND
             - S_w[i] > 0 UND
             - m_Rs[i]==0 (keine Restschneemenge vorhanden)
@@ -217,35 +217,53 @@ def main():
         '''
         if (Theta_surf[i] < 0 and S_w[i] > 0 and m_Rs[i] == 0):
             start_sb = True
-
-    # -------------------------------------------------------------------------
-    # 7.) Plots
-    # -------------------------------------------------------------------------
-
+            start_sb_counter[i] = 1
+            
     # Zeitstempel (Simulationsdauer)
     toc = tim.time()
     print('Total simulation time: {} sec'.format(toc - tic))
-
+            
+    # -------------------------------------------------------------------------
+    # 7.) zeitlich gemittelte Leistung
+    # -------------------------------------------------------------------------
+            
+    # Leistung - über Zeitintervall gemittelt
+    interv = 72  # Zeitintervall der gemittelten Leistung
+    
+    Q_m = np.zeros(Nt)
+    for i in range(0, Nt, interv):  # gemittelte Leistungen
+        interval = [x for x in Q[i:(i+interv)]]
+        Q_m[i:(i+interv)] = np.mean(interval)
+    
+    # -------------------------------------------------------------------------
+    # 8.) Plots
+    # -------------------------------------------------------------------------
+    
+    hours = np.array([(j+1)*dt/3600. for j in range(Nt)])
+    
+    # -------------------------------------------------------------------------
+    # 8.1) Figure 1
+    # -------------------------------------------------------------------------
+    
     plt.rc('figure')
-    fig = plt.figure()
+    fig1 = plt.figure()
 
     font = {'weight': 'bold', 'size': 22}
     plt.rc('font', **font)
-    
-    hours = np.array([(j+1)*dt/3600. for j in range(Nt)])
 
     # Lastprofil (thermische Leistung Q. über die Simulationsdauer)
-    ax1 = fig.add_subplot(311)
+    ax1 = fig1.add_subplot(311)
     ax1.set_xlabel(r'$t$ [h]')
     ax1.set_ylabel(r'$q$ [W/m²]')
-    ax1.plot(hours, Q / A_he, 'k-', lw=0.6)  # plot
+    ax1.plot(hours, Q / A_he, 'k-', lw=0.6)
+    ax1.plot(hours, Q_m / A_he, 'r-', lw=2)
     ax1.legend(['spezifische Entzugsleistung [W/m²]'],
                prop={'size': font['size'] - 5}, loc='upper right')
     ax1.grid('major')
     
     # Wasser- und Schneebilanzlinie (entspr. Wasserhöhe an der Oberfläche)
-    ax2 = fig.add_subplot(312)
-    ax2.set_ylabel('Wasseräq. [mm]')
+    ax2 = fig1.add_subplot(312)
+    ax2.set_ylabel('[mm]')
     ax2.plot(hours, m_Rw / A_he, 'b-', lw=0.8)
     ax2.plot(hours, m_Rs / A_he, 'g-', lw=0.8)
     ax2.legend(['Wasserhöhe', 'Schneehöhe'],
@@ -253,7 +271,7 @@ def main():
     ax2.grid('major')
 
     # Temperaturverläufe
-    ax3 = fig.add_subplot(313)
+    ax3 = fig1.add_subplot(313)
     ax3.set_ylabel(r'$T$ [°C]')
     # plots
     ax3.plot(hours, Theta_b, 'r-', lw=1.2)
@@ -262,6 +280,48 @@ def main():
                prop={'size': font['size'] - 5}, loc='upper right')
     ax3.grid('major')
 
+    # -------------------------------------------------------------------------
+    # 8.2) Figure 2
+    # -------------------------------------------------------------------------
+    
+    plt.rc('figure')
+    fig2 = plt.figure()
+
+    font = {'weight': 'bold', 'size': 22}
+    plt.rc('font', **font)
+
+    # Hilfsgrößen für Simulationsmodus
+    ax4 = fig2.add_subplot(311)
+    ax4.set_xlabel(r'$t$ [h]')
+    ax4.plot(hours, start_sb_counter, 'k--', lw=1.5)
+    ax4.plot(hours, sb_active, 'y-', lw=1.3)  # plot
+    ax4.legend(['start_sb_counter', 'sb_active'],
+               prop={'size': font['size'] - 5}, loc='upper right')
+    ax4.grid('major')
+    
+    # Schneefallrate und -bilanzlinie
+    ax5 = fig2.add_subplot(312)
+    ax5_2 = ax5.twinx()
+    ax5.set_ylabel('Schneefallrate [mm/h]')
+    ax5_2.set_ylabel('Schneehöhe [mm]')
+    ax5.plot(hours, S_w, 'b-', lw=0.8)
+    ax5_2.plot(hours, m_Rs / A_he, 'g-', lw=0.8)
+    ax5.legend(['Schneefallrate'],
+                          prop={'size': font['size'] - 5}, loc='upper left')
+    ax5_2.legend(['Schneehöhe'],
+                          prop={'size': font['size'] - 5}, loc='upper right')
+    ax5.grid('major')
+
+    # Temperaturverläufe
+    ax6 = fig2.add_subplot(313)
+    ax6.set_ylabel(r'$T$ [°C]')
+    # plots
+    ax6.plot(hours, Theta_b, 'r-', lw=1.2)
+    ax6.plot(hours, Theta_surf, 'c-', lw=0.6)
+    ax6.legend(['T_Bohrlochrand', 'T_Oberfläche'],
+               prop={'size': font['size'] - 5}, loc='upper right')
+    ax6.grid('major')
+
     # Beschriftung Achsenwerte
     ax1.xaxis.set_minor_locator(AutoMinorLocator())
     ax1.yaxis.set_minor_locator(AutoMinorLocator())
@@ -269,6 +329,12 @@ def main():
     ax2.yaxis.set_minor_locator(AutoMinorLocator())
     ax3.xaxis.set_minor_locator(AutoMinorLocator())
     ax3.yaxis.set_minor_locator(AutoMinorLocator())
+    ax4.xaxis.set_minor_locator(AutoMinorLocator())
+    ax4.yaxis.set_minor_locator(AutoMinorLocator())
+    ax5.xaxis.set_minor_locator(AutoMinorLocator())
+    ax5.yaxis.set_minor_locator(AutoMinorLocator())
+    ax6.xaxis.set_minor_locator(AutoMinorLocator())
+    ax6.yaxis.set_minor_locator(AutoMinorLocator())
     # plt.tight_layout()  # Fenstergröße anpassen
 
     return
