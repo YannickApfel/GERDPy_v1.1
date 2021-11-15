@@ -17,7 +17,7 @@ from load_generator_utils import *
 
 
 # Definition & Bilanzierung der Einzellasten
-def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, RR, m_Rw_0, m_Rs_0, ssb):  
+def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, RR, m_Rw_0, m_Rs_0, start_sb):  
     # Theta_x_0: Temp. des vorhergehenden Zeitschritts
 
     # 0.) Preprocessing
@@ -32,7 +32,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
         - Schnee wird instantan (=innerhalb des Zeitschritts) abgeschmolzen
     '''
     # Simulationsmodus ermitteln:
-    if (m_Rs_0 > 0 or ssb is True):  # Schneedecke bildet sich
+    if (m_Rs_0 > 0 or start_sb is True):  # Schneedecke bildet sich
         sb_active = 1  # snow-balancing aktivieren
     else:  # Oberfläche ist schnee-frei
         sb_active = 0
