@@ -76,7 +76,7 @@ def main():
     # 1.4) Heizelement
 
     # Fläche Heizelement [m2]
-    A_he = 35
+    A_he = 30
 
     # minimaler Oberflächenabstand [mm]
     x_min = 15

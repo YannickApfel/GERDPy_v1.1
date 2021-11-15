@@ -46,7 +46,7 @@ def p_inf(h_NHN):
     return 101325 * (1 - 0.0065 * h_NHN / 288.2) ** 5.265
 
 # Sättigungs-Dampfdruck nach ASHRAE2013 [Pa]
-def p_s(T):  # Input in [K]
+def p_s_ASHRAE(T):  # Input in [K]
     C_1 = -5.6745359e3
     C_2 = 6.3925247e0
     C_3 = -9.6778430e-3
@@ -68,6 +68,12 @@ def p_s(T):  # Input in [K]
     else:
         print('Interner Fehler: erlaubter T-Bereich für Sättigungs-Dampfdruckformel nach ASHRAE2013 unter-/überschritten!')
         sys.exit()
+        
+# Sättigungs-Dampfdruck nach einer empirischen Abschätzung in [Konrad2009], [Pa]
+def p_s(Theta):  # Input in [°C]
+    p_s = 6.108 * math.exp((17.081 * Theta) / (234.175 + Theta)) * 100  # Input in [°C]
+    
+    return p_s
 
 
 # Wärmeübergangskoeffizient [W/m²K]
@@ -154,7 +160,7 @@ def beta_c(Theta_inf, u, h_NHN):
 def X_D_inf(Theta_inf, Phi, h_NHN):
     # Sättigungsdampfdruck in der Umgebung bei Taupunkttemperatur: p_D = p_s(T_tau(Theta_inf, Phi))
     T_tau = CP.HAPropsSI('DewPoint', 'T', (Theta_inf + 273.15), 'P', 101325, 'R', Phi)  # Input in [K]
-    p_D = p_s(T_tau)  # Input in [K]
+    p_D = p_s_ASHRAE(T_tau)  # Input in [K]
 
     return 0.622 * p_D / (p_inf(h_NHN) - p_D)
 
@@ -162,6 +168,6 @@ def X_D_inf(Theta_inf, Phi, h_NHN):
 # Wasserdampfbeladung der gesättigten Luft bei Theta_surf [kg Dampf / kg Luft]
 def X_D_sat_surf(Theta_surf, h_NHN):
     # Sättigungsdampfdruck an der Heizelementoberfläche bei Theta_surf: p_D = p_s(Theta_surf)
-    p_D = p_s(Theta_surf + 273.15)  # Input in [K]
+    p_D = p_s_ASHRAE(Theta_surf + 273.15)  # Input in [°C]
 
     return 0.622 * p_D / (p_inf(h_NHN) - p_D)
