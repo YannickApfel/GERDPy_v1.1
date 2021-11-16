@@ -83,7 +83,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
             # Q_Strahlung
             Q_rad = 0
             if rad:  # Theta_surf_0 statt Theta_surf_, da sonst 4 Nullstellen
-                Q_rad = sigma * epsilon_surf('Beton') * ((Theta_surf_0 + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
+                Q_rad = sigma * epsilon_surf('Beton') * ((Theta_surf_ + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
 
             # Q_Verdunstung
             ''' Voraussetzungen: 
@@ -101,7 +101,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
 
             # stationäre Leistungbilanz (Oberfläche + Umgebung) & Auflösung nach Theta_surf_
             F_T = sp.Eq(Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva), 0)
-            Theta_surf_sol = float(np.array(sp.solve(F_T, Theta_surf_)))
+            Theta_surf_sol = float(np.array(sp.solve(F_T, Theta_surf_))[1])  # Nullstelle Nr. 2
 
             Q_sol = -1  # keine Entzugsleistung aus dem Boden
 
@@ -137,8 +137,6 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
             # 2.6) Fallunterscheidung Restleistung Q_R
             if Q_R < 0:  # keine Restleistung für Schneeschmelze vorhanden
 
-                calc_T_surf = True
-
                 # 2.7) Verlustleistungsterme (parametriert) - Parameter Q
                 Q = sp.symbols('Q')  # thermische Leistung Q als Parameter definieren
 
@@ -152,24 +150,14 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
                 if rad:  # Theta_surf_0 statt Theta_surf_, da sonst 4 Nullstellen
                     Q_rad = sigma * epsilon_surf('Beton') * ((Theta_b_0 - Q * R_th + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
 
-                # Q_Verdunstung
-                ''' Voraussetzungen: 
-                        - Theta_surf >= 0 °C
-                        - Oberfläche ist nass (Abfrage der Restwassermenge m_Rw)
-                '''
-                Q_eva = 0
-                if (eva and Theta_surf_0 >= 0 and m_Rw_0 > 0):
-                    Q_eva = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_surf_0, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
-    
-                if Q_eva < 0:  # Verdunstungswärmestrom ist definitorisch positiv! <--> Kondensation wird vernachlässigt
-                    Q_eva = 0
+                # Q_Verdunstung (vererbt)
 
                 # Q_sensibel, Q_latent = 0
                 Q_sen, Q_lat = 0, 0
 
                 # 2.8) stationäre Leistungbilanz (Erdboden + Oberfläche + Umgebung) & Auflösung nach Q
                 F_Q = sp.Eq(Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva) - Q, 0)
-                Q_sol = float(np.array(sp.solve(F_Q, Q))[0])
+                Q_sol = float(np.array(sp.solve(F_Q, Q))[0])  # Nullstelle Nr. 1
 
             else:  # Restleistung für Schneeschmelze vorhanden
 
@@ -242,43 +230,33 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
 
         # 2.3) stationäre Leistungbilanz (Erdboden + Oberfläche + Umgebung) & Auflösung nach Q
         F_Q = sp.Eq(Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva) - Q, 0)
-        Q_sol = float(np.array(sp.solve(F_Q, Q))[0])
+        Q_sol = float(np.array(sp.solve(F_Q, Q))[0])  # Nullstelle Nr. 1
 
         # 2.4) Fall Q. < 0
-        # if Q_sol < 0:  # kein Wärmeentzug aus Erdboden
-        #     calc_T_surf = True
+        if Q_sol < 0:  # kein Wärmeentzug aus Erdboden
+            calc_T_surf = True
 
-        #     # Schmelz- und Verlustleistungsterme (parametriert) - Parameter Theta_surf_
-        #     Theta_surf_ = sp.symbols('Theta_surf_')  # Oberflächentemperatur als Parameter definieren
+            # Schmelz- und Verlustleistungsterme (parametriert) - Parameter Theta_surf_
+            Theta_surf_ = sp.symbols('Theta_surf_')  # Oberflächentemperatur als Parameter definieren
 
-        #     # Q_Konvektion
-        #     Q_con = 0
-        #     if con:
-        #         Q_con = alpha_kon_Bentz(u_inf) * (Theta_surf_ - Theta_inf) * A_he
+            # Q_Konvektion
+            Q_con = 0
+            if con:
+                Q_con = alpha_kon_Bentz(u_inf) * (Theta_surf_ - Theta_inf) * A_he
 
-        #     # Q_Strahlung (vererbt)
+            # Q_Strahlung
+            Q_rad = 0
+            if rad:  # Theta_surf_0 statt Theta_surf_, da sonst 4 Nullstellen
+                Q_rad = sigma * epsilon_surf('Beton') * ((Theta_surf_ + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
 
-        #     # Q_Verdunstung
-        #     ''' Voraussetzungen: 
-        #             - Theta_surf >= 0 °C
-        #             - Oberfläche ist nass (Abfrage der Restwassermenge m_Rw)
-        #     '''
-        #     Q_eva = 0
-        #     if (eva and Theta_surf_0 >= 0 and m_Rw_0 > 0):
-        #         Q_eva = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_surf_0, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
-        #     if Q_eva < 0:  # Verdunstungswärmestrom ist definitorisch positiv! <--> Kondensation wird vernachlässigt
-        #         Q_eva = 0  
+            # Q_Verdunstung (vererbt)  
 
-        #     # Q_sensibel
-        #     Q_sen = 0
-        #     if sen:
-        #         Q_sen= rho_w * S_w * (c_p_s * (Theta_Schm - Theta_inf) + c_p_w * (Theta_surf_ - Theta_Schm)) * (3.6e6)**-1 * A_he
+            # Q_sensibel, Q_latent = 0
+            Q_sen, Q_lat = 0, 0
 
-        #     # Q_latent (vererbt)
-
-        #     # stationäre Leistungbilanz (Oberfläche + Umgebung) & Auflösung nach Theta_surf_
-        #     F_T = sp.Eq(Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva), 0)
-        #     Theta_surf_sol = float(np.array(sp.solve(F_T, Theta_surf_)))
+            # stationäre Leistungbilanz (Oberfläche + Umgebung) & Auflösung nach Theta_surf_
+            F_T = sp.Eq(Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva), 0)
+            Theta_surf_sol = float(np.array(sp.solve(F_T, Theta_surf_))[1])  # Nullstelle Nr.2
 
     # 3.) Wasser- und Schneehöhenbilanz auf Heizelement
 
