@@ -243,7 +243,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
         '''
 
         # 2.1) Pre-Processing
-        R_f = 0.2  # free-area ratio
+        R_f = 0.4  # free-area ratio
         Theta_surf_0 = Theta_Schm  # Fixieren der Oberflächentemperatur
 
         # 2.2) verfügbare Entzugsleistung

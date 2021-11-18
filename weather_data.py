@@ -5,13 +5,10 @@
 """
 
 
-def get_weather_data(Nt):
+def get_weather_data(Nt, path):
 
     import numpy as np
     import pandas as pd
-
-    # Dateipfad der Wetterdaten-Datei definieren
-    path = './data/Wetterdaten_München-Riem_h.xlsx'
 
     # Wetterdaten importieren
     data = pd.read_excel(path)

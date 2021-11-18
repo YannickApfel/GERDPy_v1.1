@@ -35,6 +35,7 @@ def main():
 
     # 1.0) Standort
     h_NHN = 520                # Höhe über Normal-Null des Standorts
+    path_wd = './data/Wetterdaten_Hohenpeissenberg_h.xlsx'  # Dateipfad der Wetterdaten-Datei definieren
 
     # 1.1) Erdboden
     a = 1.0e-6                  # Temperaturleitfähigkeit [m2/s]
@@ -71,7 +72,7 @@ def main():
     hp = heatpipes.Heatpipes(N, r_b, r_w, r_pa, r_iso, r_pi, lambda_b,
                              lambda_iso, lambda_p)
     # Layout-Plot der Wärmerohrkonfiguration
-    # hp.visualize_hp_config()
+    hp.visualize_hp_config()
 
     # 1.4) Heizelement
 
@@ -137,7 +138,7 @@ def main():
     # -------------------------------------------------------------------------
 
     # Import Wetterdaten aus weather_data.py
-    u_inf, Theta_inf, S_w, B, Phi, RR = get_weather_data(Nt)
+    u_inf, Theta_inf, S_w, B, Phi, RR = get_weather_data(Nt, path_wd)
     ''' u_inf - Windgeschwindigkeit [m/s]
         Theta_inf - Umgebungstemperatur [°C]
         S_w - Schneefallrate (Wasserequivalent) [mm/s]
@@ -220,7 +221,7 @@ def main():
             start_sb = True
             start_sb_counter[i] = 1
             
-        print(f'Iter: {i}, Sim-Mode: {sim_mod[i]}')
+        print(f'Iter: {i+1}, Sim-Mode: {int(sim_mod[i])}')
             
     # Zeitstempel (Simulationsdauer)
     toc = tim.time()
