@@ -71,13 +71,6 @@ def p_s_ASHRAE(T):  # Input in [K]
         sys.exit()
 
 
-# Sättigungs-Dampfdruck mit einer empirischen Abschätzung nach [Konrad2009], [Pa]     
-def p_s(Theta):  # Input in [°C]
-    p_s = 6.108 * math.exp((17.081 * Theta) / (234.175 + Theta)) * 100
-    
-    return p_s
-
-
 # Wärmeübergangskoeffizient [W/m²K]
 # nach [Bentz D. P. 2000] (nur erzwungene Konvektion)
 # alpha = alpha(u_air)
@@ -162,7 +155,6 @@ def beta_c(Theta_inf, u, h_NHN):
 def X_D_inf(Theta_inf, Phi, h_NHN):
     # Sättigungsdampfdruck in der Umgebung bei Taupunkttemperatur: p_D = p_s_ASHRAE(T_tau(Theta_inf, Phi))
     T_tau = CP.HAPropsSI('DewPoint', 'T', (Theta_inf + 273.15), 'P', 101325, 'R', Phi)  # Input in [K]
-    # p_D = p_s(T_tau - 273.15)  # Input in [°C]
     p_D = p_s_ASHRAE(T_tau)  # Input in [K]      
 
     return 0.622 * p_D / (p_inf(h_NHN) - p_D)
@@ -171,7 +163,6 @@ def X_D_inf(Theta_inf, Phi, h_NHN):
 # Wasserdampfbeladung der gesättigten Luft bei Theta_surf [kg Dampf / kg Luft]
 def X_D_sat_surf(Theta_surf, h_NHN):
     # Sättigungsdampfdruck an der Heizelementoberfläche bei Theta_surf: p_D = p_s_ASHRAE(Theta_surf)
-    # p_D = p_s(Theta_surf)  # Input in [°C]
     p_D = p_s_ASHRAE(Theta_surf + 273.15)  # Input in [K]
 
     return 0.622 * p_D / (p_inf(h_NHN) - p_D)

@@ -76,7 +76,7 @@ def main():
     # 1.4) Heizelement
 
     # Fläche Heizelement [m2]
-    A_he = 30
+    A_he = 50
 
     # minimaler Oberflächenabstand [mm]
     x_min = 15
@@ -161,13 +161,13 @@ def main():
     Theta_b = np.zeros(Nt)      # Bohrlochrand
     Theta_surf = np.zeros(Nt)   # Oberfläche Heizelement
     
-    # Initialisierung Vektor für Restwassermenge
+    # Initialisierung Vektor für Restwassermenge [mm]
     m_Rw = np.zeros(Nt)
     
-    # Initialisierung Vektor für Restschneemenge
+    # Initialisierung Vektor für Restschneemenge [mm H2O]
     m_Rs = np.zeros(Nt)
 
-    # Initialisierung Entnahmeleistung
+    # Initialisierung Entnahmeleistung [W]
     Q = np.zeros(Nt)
 
     print('Simulating...')
@@ -175,6 +175,7 @@ def main():
     # Hilfsgrößen
     start_sb_counter = np.zeros(Nt)
     sb_active = np.zeros(Nt)
+    sim_mod = np.zeros(Nt)
 
     while time < tmax:  # Iterationsschleife (ein Durchlauf pro Zeitschritt)
         
@@ -187,11 +188,11 @@ def main():
 
         # Ermittlung der Entzugsleistung im 1. Zeitschritt
         if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g, Heizelementoberfläche trocken und Schnee-frei
-            Q[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, 
+            Q[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, 
                                                          R_th, Theta_g, B[i], Phi[i], RR[i], 0, 0, start_sb)
 
         if i > 0:  # alle weiteren Zeitschritte (ermittelte Bodentemperatur)
-            Q[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], 
+            Q[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], 
                                                          R_th, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1], m_Rs[i-1], start_sb)
             
         start_sb = False  # Variable Start-Schneebilanzierung zurücksetzen
@@ -219,21 +220,26 @@ def main():
             start_sb = True
             start_sb_counter[i] = 1
             
+        print(f'Iter: {i}, Sim-Mode: {sim_mod[i]}')
+            
     # Zeitstempel (Simulationsdauer)
     toc = tim.time()
     print('Total simulation time: {} sec'.format(toc - tic))
             
     # -------------------------------------------------------------------------
-    # 7.) zeitlich gemittelte Leistung
+    # 7.) zeitlich gemittelte Leistung & Gesamtenergie
     # -------------------------------------------------------------------------
             
     # Leistung - über Zeitintervall gemittelt
     interv = 72  # Zeitintervall der gemittelten Leistung
     
-    Q_m = np.zeros(Nt)
+    Q_m = np.zeros(Nt)  # [W]
     for i in range(0, Nt, interv):  # gemittelte Leistungen
         interval = [x for x in Q[i:(i+interv)]]
         Q_m[i:(i+interv)] = np.mean(interval)
+        
+    E_tot = (np.sum(Q) / len(Q)) * len(Q) / 1e6  # [MWh]
+    print(f'Dem Boden wurden {E_tot} MWh entnommen')
     
     # -------------------------------------------------------------------------
     # 8.) Plots
@@ -290,12 +296,13 @@ def main():
     font = {'weight': 'bold', 'size': 22}
     plt.rc('font', **font)
 
-    # Hilfsgrößen für Simulationsmodus
+    # Darstellungen Simulationsmodus
     ax4 = fig2.add_subplot(311)
     ax4.set_xlabel(r'$t$ [h]')
-    ax4.plot(hours, start_sb_counter, 'k--', lw=1.5)
-    ax4.plot(hours, sb_active, 'y-', lw=1.3)  # plot
-    ax4.legend(['start_sb_counter', 'sb_active'],
+    # ax4.plot(hours, start_sb_counter, 'k--', lw=1.5)
+    ax4.plot(hours, sb_active, 'g-', lw=1.3)
+    ax4.plot(hours, sim_mod, 'y-', lw=1.3)
+    ax4.legend(['sb_active', 'sim_mod'],
                prop={'size': font['size'] - 5}, loc='upper right')
     ax4.grid('major')
     

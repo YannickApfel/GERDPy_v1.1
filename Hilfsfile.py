@@ -48,12 +48,12 @@ from load_generator_utils import *
 
 h_NHN = 520
 u_inf = 30
-Theta_inf = -40
+Theta_inf = -4
 S_w = 1
 A_he = 8
-Theta_b = 10
-R_th = 0.00051
-Theta_surf = 5
+Theta_b_0 = 10
+R_th = 0.051
+Theta_surf_0 = 5
 S_w = 0.1
 B = 3/8
 Phi = 0.8
@@ -62,78 +62,138 @@ m_Rw_0 = 1
 m_Rs_0 = 0
 ssb = 0
 
-# q = np.linspace(-10000, 10000, 1000)
-# F_q = load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf, B, Phi, RR, m_Rw_0, m_Rs_0, ssb)
-# plt.plot(q, F_q)
-# plt.show()
+con = True
+rad = True
+eva = True
+sen = True
+lat = True
 
- # 2.1) Pre-Processing
+
+def F_Q(lat, S_w, A_he, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi):
+
+    F_Q = Q_lat(lat, S_w, A_he) \
+        + Q_sen(Q, sen, S_w, Theta_inf, Theta_b_0, R_th, A_he) \
+            + R_f \
+                * (Q_con(Q, con, u_inf, Theta_b_0, R_th, Theta_inf, A_he) \
+                    + Q_rad(Q, rad, Theta_b_0, R_th, S_w, Theta_inf, B, Phi, A_he) \
+                        + Q_eva_pos(Q, eva, Theta_surf_0, m_Rw_0, Theta_inf, u_inf, h_NHN, Theta_b_0, R_th, Phi, A_he)) \
+                            - Q
+
+    return F_Q
+
+def Q_con(Q, con, u_inf, Theta_b_0, R_th, Theta_inf, A_he):  # Q_Konvektion
+    Q_con = 0
+    if con:
+        Q_con = alpha_kon_Bentz(u_inf) * (Theta_b_0 - Q * R_th - Theta_inf) * A_he
+        
+    return Q_con
+
+
+def Q_rad(Q, rad, Theta_b_0, R_th, S_w, Theta_inf, B, Phi, A_he):  # Q_Strahlung
+    Q_rad = 0
+    if rad:
+        Q_rad = sigma * epsilon_surf('Beton') * ((Theta_b_0 - Q * R_th + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
+        
+    return Q_rad
+
+
+def Q_eva_pos(Q, eva, Theta_surf_0, m_Rw_0, Theta_inf, u_inf, h_NHN, Theta_b_0, R_th, Phi, A_he):  # Q_Verdunstung (nur positiv)
+    Q_eva = 0
+    if (eva and Theta_surf_0 >= 0 and m_Rw_0 > 0):
+        Q_eva = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_b_0 - Q * R_th, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
+
+    if Q_eva < 0:  # Verdunstungswärmestrom ist definitorisch positiv! <--> Kondensation wird vernachlässigt
+        Q_eva = 0
+    
+    return Q_eva
+
+
+def Q_sen(Q, sen, S_w, Theta_inf, Theta_b_0, R_th, A_he):  # Q_sensibel
+    Q_sen = 0
+    if sen:
+        Q_sen = rho_w * S_w * (c_p_s * (Theta_Schm - Theta_inf) + c_p_w * (Theta_b_0 - Q * R_th - Theta_Schm)) * (3.6e6)**-1 * A_he
+        
+    return Q_sen
+
+
+def Q_lat(lat, S_w, A_he):  # Q_latent
+    Q_lat = 0
+    if lat:
+        Q_lat = rho_w * S_w * h_Ph_sl * (3.6e6)**-1 * A_he
+        
+    return Q_lat
+
+
+# 2.1) Pre-Processing
 R_f = 1  # free-area ratio
 
 # # 2.2) Schmelz- und Verlustleistungsterme (parametriert) - Parameter Q
 # Q = sp.symbols('Q')  # thermische Leistung Q als Parameter definieren
 
 # # Q_Konvektion
-# Q_con = alpha_kon_Bentz(u_inf) * (Theta_b - Q * R_th - Theta_inf) * A_he
+# Q_con = 0
+# if con:
+#     Q_con = alpha_kon_Bentz(u_inf) * (Theta_b_0 - Q * R_th - Theta_inf) * A_he
 
 # # Q_Strahlung
-# # Theta_surf_0 statt Theta_surf_, da sonst 4 Nullstellen
-# Q_rad = sigma * epsilon_surf('Beton') * ((Theta_b - Q * R_th + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
+# Q_rad = 0
+# if rad:  # Theta_surf_0 statt Theta_surf_, da sonst 4 Nullstellen
+#     Q_rad = sigma * epsilon_surf('Beton') * ((Theta_b_0 - Q * R_th + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
 
+    
 # # Q_Verdunstung
-# Q_eva = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_surf, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
+# Q_eva = 0
+# if (eva and Theta_surf_0 >= 0 and m_Rw_0 > 0):
+#     Q_eva = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_surf_0, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
 # if Q_eva < 0:  # Verdunstungswärmestrom ist definitorisch positiv! <--> Kondensation wird vernachlässigt
 #     Q_eva = 0  
 
 # # Q_sensibel
-# # Q_sen = 0
-# Q_sen = rho_w * S_w * (c_p_s * (Theta_Schm - Theta_inf) + c_p_w * (Theta_b - Q * R_th - Theta_Schm)) * (3.6e6)**-1 * A_he
+# Q_sen = 0
+# if sen:
+#     Q_sen = rho_w * S_w * (c_p_s * (Theta_Schm - Theta_inf) + c_p_w * (Theta_b_0 - Q * R_th - Theta_Schm)) * (3.6e6)**-1 * A_he
 
 # # Q_latent
-# # Q_lat = 0
-# Q_lat = rho_w * S_w * h_Ph_sl * (3.6e6)**-1 * A_he
+# Q_lat = 0
+# if lat:
+#     Q_lat = rho_w * S_w * h_Ph_sl * (3.6e6)**-1 * A_he 
 
 # # 2.3) stationäre Leistungbilanz (Erdboden + Oberfläche + Umgebung) & Auflösung nach Q
 # F_Q = sp.Eq(Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva) - Q, 0)
-# Q_sol = np.array(sp.solve(F_Q, Q))
-# print(type(Q_sol))
+# Q_sol = float(np.array(sp.solve(F_Q, Q))[0])  # Nullstelle Nr. 1
 
-# # print(len(Q_sol))
-# print(Q_sol)
 
-# Schmelz- und Verlustleistungsterme (parametriert) - Parameter Theta_surf_
-Theta_surf_ = sp.symbols('Theta_surf_')  # Oberflächentemperatur als Parameter definieren
+# Iterativer Lösungsalgorithmus:
 
-# Q_Konvektion
-Q_con = alpha_kon_Bentz(u_inf) * (Theta_surf_ - Theta_inf) * A_he
+step_refine = 0  # Hilfsvariable zur Verfeinerung der Schrittweite
+step = 30  # doppelter Startwert für Iterationsschrittweite für Q_var
+res = 0.5  # zulässiges Residuum für F_Q (Restfehler)
 
-# Q_Strahlung
-Q_rad = sigma * epsilon_surf('Beton') * ((Theta_surf_ + 273.15) ** 4 - T_MS(S_w, Theta_inf, B, Phi) ** 4) * A_he
+Q_var = 0  # Startwert für Leistung
 
-# Q_Verdunstung
-Q_eva = rho_l * beta_c(Theta_inf, u_inf, h_NHN) * (X_D_sat_surf(Theta_surf, h_NHN) - X_D_inf(Theta_inf, Phi, h_NHN)) * h_Ph_lg * A_he
-if Q_eva < 0:  # Verdunstungswärmestrom ist definitorisch positiv! <--> Kondensation wird vernachlässigt
-    Q_eva = 0
+error = abs(F_Q(lat, S_w, A_he, Q_var, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi))
 
-# Q_sensibel
-Q_sen= rho_w * S_w * (c_p_s * (Theta_Schm - Theta_inf) + c_p_w * (Theta_surf_ - Theta_Schm)) * (3.6e6)**-1 * A_he
-Q_sen = 0
+while error > res:
+    if F_Q(lat, S_w, A_he, Q_var, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi) > 0:
+        step_refine += 1
+        while F_Q(lat, S_w, A_he, Q_var, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi) > 0:
+            Q_var += (step / (2 * step_refine))
+    elif F_Q(lat, S_w, A_he, Q_var, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi) < 0:
+        step_refine += 1
+        while F_Q(lat, S_w, A_he, Q_var, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi) < 0:
+            Q_var -= (step / (2 * step_refine))
 
-# Q_latent
-Q_lat = rho_w * S_w * h_Ph_sl * (3.6e6)**-1 * A_he
-Q_lat = 0
+    error = abs(F_Q(lat, S_w, A_he, Q_var, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi))
+    
+Q_sol = Q_var
 
-# stationäre Leistungbilanz (Oberfläche + Umgebung) & Auflösung nach Theta_surf_
-F_T = sp.Eq(Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva), 0)
-Theta_surf_sol = np.array(sp.solve(F_T, Theta_surf_))
+print(type(Q_sol))
+print(Q_sol)
 
-print(type(Theta_surf_sol))
-print(len(Theta_surf_sol))
-print(Theta_surf_sol)
-
-F_T = Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva)
-fig = plot(F_T, (Theta_surf_, -1000, 1000))
-fig.show()
+# Q = sp.symbols('Q')  # thermische Leistung Q als Parameter definieren
+# F_Q = Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva) - Q
+# fig = plot(F_Q, (Q, -10000, 10000))
+# fig.show()
 
 
 #%% Verdunstung

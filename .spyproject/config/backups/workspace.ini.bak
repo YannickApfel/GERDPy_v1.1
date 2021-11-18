@@ -6,5 +6,5 @@ save_non_project_files = False
 
 [main]
 version = 0.2.0
-recent_files = ['_main.py', 'load_generator.py', 'load_generator_utils.py', 'Hilfsfile.py']
+recent_files = ['_main.py', 'load_generator.py', 'load_generator_utils.py', 'weather_data.py', 'Hilfsfile.py', 'R_th_tot.py', 'R_th_b.py']
 
