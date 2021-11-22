@@ -34,39 +34,40 @@ def main():
     # -------------------------------------------------------------------------
 
     # 1.0) Standort
-    h_NHN = 520                # Höhe über Normal-Null des Standorts
-    path_wd = './data/Wetterdaten_Hohenpeissenberg_h.xlsx'  # Dateipfad der Wetterdaten-Datei definieren
+    h_NHN = 780                                     # Höhe über Normal-Null des Standorts  [m]
+    path_wd = \
+    './data/Wetterdaten_Hohenpeissenberg_h.xlsx'    # Dateipfad der Wetterdaten-Datei definieren
 
     # 1.1) Erdboden
-    a = 1.0e-6                  # Temperaturleitfähigkeit [m2/s]
-    lambda_g = 2.0              # Wärmeleitfähigkeit [W/mK]
-    Theta_g = 10.0                  # ungestörte Bodentemperatur [°C]
+    a = 1.0e-6                                      # Temperaturleitfähigkeit [m²/s]
+    lambda_g = 2.0                                  # Wärmeleitfähigkeit [W/mK]
+    Theta_g = 10.0                                  # ungestörte Bodentemperatur [°C]
 
     # 1.2) Erdwärmesondenfeld
 
     # Geometrie-Import (.txt-Datei)
-    boreField = boreholes.field_from_file('./data/custom_field_5.txt')
+    boreField = boreholes.field_from_file('./data/custom_field_32.txt')
 
-    # Sondenmeter (gesamt)
+    # Sondenmeter (gesamt)  [m]
     H_field = boreholes.length_field(boreField)
 
     # Layout-Plot des Erdwärmesondenfelds
-    # boreholes.visualize_field(boreField)
+    boreholes.visualize_field(boreField)
 
     # 1.3) Bohrloch
 
     # Geometrie
-    N = 6                        # Anzahl Heatpipes pro Bohrloch [-]
-    r_b = boreField[0].r_b  # Radius der Erdwärmesondenbohrung [m]
-    r_w = 0.12                # Radius der Wärmerohr-Mittelpunkte [m]
-    r_pa = 0.016                 # Außenradius der Isolationsschicht [m]
-    r_iso = 0.016                # Innenradius der Isolationsschicht [m]
-    r_pi = 0.015                # Innenradius des Wärmerohrs [m]
+    N = 10                                          # Anzahl Heatpipes pro Bohrloch [-]
+    r_b = boreField[0].r_b                          # Radius der Erdwärmesondenbohrung [m]
+    r_w = 0.07                                      # Radius der Wärmerohr-Mittelpunkte [m]
+    r_pa = 0.006                                    # Außenradius der Isolationsschicht [m]
+    r_iso = 0.006                                   # Innenradius der Isolationsschicht [m]
+    r_pi = 0.0053                                   # Innenradius des Wärmerohrs [m]
 
-    # Wärmeleitfähigkeiten
-    lambda_b = 2                # lambda der Hinterfüllung [W/mK]
-    lambda_iso = 0.3            # lambda der Isolationsschicht [W/mK]
-    lambda_p = 14               # lambda der Heatpipe [W/mK]
+    # Wärmeleitfähigkeiten [W/mK]
+    lambda_b = 2                                    # Hinterfüllung
+    lambda_iso = 0.3                                # Isolationsschicht
+    lambda_p = 14                                   # Heatpipe
 
     # Geometrie-Erstellung
     hp = heatpipes.Heatpipes(N, r_b, r_w, r_pa, r_iso, r_pi, lambda_b,
@@ -83,7 +84,7 @@ def main():
     x_min = 15
 
     # Wärmeleitfähigkeit des Betonelements [W/mk]
-    lambda_Bet = 2.3
+    lambda_Bet = 2
 
     # Geometrie-Erstellung
     he = heating_element.HeatingElement(A_he, x_min, lambda_Bet)
@@ -91,9 +92,12 @@ def main():
     # 2.) Simulation
 
     # Simulationsparameter
-    dt = 3600.                           # Zeitschrittweite [s]
-    tmax = 1 * 12 * (8760./12) * 3600.    # Gesamt-Simulationsdauer [s]
-    Nt = int(np.ceil(tmax/dt))           # Anzahl Zeitschritte [-]
+    ''' dt darf 3600s (eine Stunde) aufgrund des Gültigkeitsbereichs der G-Functions
+        nicht unterschreiten
+    '''
+    dt = 3600.                                      # Zeitschrittweite [s]
+    tmax = 1 * 12 * (8760./12) * 3600.              # Gesamt-Simulationsdauer [s]
+    Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
     # 2.) Überprüfung der geometrischen Verträglichkeit (Sonden & Heatpipes)
@@ -113,7 +117,7 @@ def main():
     # 3.) Ermittlung thermischer Widerstand Bohrlochrand bis Oberfläche
     # -------------------------------------------------------------------------
 
-    R_th = R_th_tot(lambda_g, boreField, hp, he)
+    R_th = R_th_tot(lambda_g, boreField, hp, he)    # [K/W]
 
     # -------------------------------------------------------------------------
     # 4.) Ermittlung der G-Function (Bodenmodell)
@@ -143,7 +147,7 @@ def main():
         Theta_inf - Umgebungstemperatur [°C]
         S_w - Schneefallrate (Wasserequivalent) [mm/s]
         B - Bewölkungsgrad [octal units / 8]
-        Phi - rel. Luftfeuchte [%]
+        Phi - rel. Luftfeuchte [-]
     '''
 
     # -------------------------------------------------------------------------
@@ -152,24 +156,25 @@ def main():
 
     time = 0.
     i = -1
-    start_sb = False  # sb - snow balancing
+    start_sb = False                                # sb - snow balancing
 
-    # Initialisierung Temperaturen
+    # Initialisierung Temperaturen [°C]
     ''' Vektoren:
             Q[i] - Entzugsleistung f. Zeitschritt i 
             Theta_surf[i] - Oberflächentemp. f. Zeitschritt i
     '''
-    Theta_b = np.zeros(Nt)      # Bohrlochrand
-    Theta_surf = np.zeros(Nt)   # Oberfläche Heizelement
+    Theta_b = np.zeros(Nt)                          # Bohrlochrand
+    Theta_surf = np.zeros(Nt)                       # Oberfläche Heizelement
     
     # Initialisierung Vektor für Restwassermenge [mm]
     m_Rw = np.zeros(Nt)
     
-    # Initialisierung Vektor für Restschneemenge [mm H2O]
+    # Initialisierung Vektor für Restschneemenge [mm - Wasserequivalent]
     m_Rs = np.zeros(Nt)
 
-    # Initialisierung Entnahmeleistung [W]
+    # Initialisierung Gesamt-Entzugsleistung und Nutzleistung [W]
     Q = np.zeros(Nt)
+    Q_N = np.zeros(Nt)
 
     print('Simulating...')
 
@@ -178,7 +183,7 @@ def main():
     sb_active = np.zeros(Nt)
     sim_mod = np.zeros(Nt)
 
-    while time < tmax:  # Iterationsschleife (ein Durchlauf pro Zeitschritt)
+    while time < tmax:                              # Iterationsschleife (ein Durchlauf pro Zeitschritt)
         
         # Zeitschritt um 1 inkrementieren
         if start_sb == False:
@@ -188,70 +193,90 @@ def main():
         LoadAgg.next_time_step(time)
 
         # Ermittlung der Entzugsleistung im 1. Zeitschritt
-        if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g, Heizelementoberfläche trocken und Schnee-frei
-            Q[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g, 
-                                                         R_th, Theta_g, B[i], Phi[i], RR[i], 0, 0, start_sb)
+        if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g, Heizelementoberfläche trocken und schneefrei
+            Q[i], Q_N[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = \
+                load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g,
+                     R_th, Theta_g, B[i], Phi[i], RR[i], 0, 0, start_sb)
 
-        if i > 0:  # alle weiteren Zeitschritte (ermittelte Bodentemperatur)
-            Q[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], 
-                                                         R_th, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1], m_Rs[i-1], start_sb)
-            
+        # Ermittlung der Entzugsleistung im Zeitschritt 2, 3, ..., Nt
+        if i > 0:
+            Q[i], Q_N[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = \
+                load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], 
+                     R_th, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1], m_Rs[i-1], start_sb)
+
         start_sb = False  # Variable Start-Schneebilanzierung zurücksetzen
 
-        # Aufprägung der ermittelten Entzugsleistung mit 'load_aggregation.py'
+        # Aufprägung der ermittelten Entzugsleistung auf Bodenmodell ('load_aggregation.py')
         LoadAgg.set_current_load(Q[i]/H_field)
 
-        # Temperatur am Bohrlochrand
+        # Temperatur am Bohrlochrand [°C]
         deltaTheta_b = LoadAgg.temporal_superposition()
         Theta_b[i] = Theta_g - deltaTheta_b
 
-        # Temperatur an der Oberfläche des Heizelements
-        if calc_T_surf == False:
+        # Temperatur an der Oberfläche des Heizelements [°C]
+        ''' Theta_surf wird hier nur ermittelt, falls Q. >= 0 (positive Entzugsleistung aus Boden), sonst
+            erfolgt deren Ermittlung in 'load_generator.py' mit Hilfe einer vereinfachten Leistungsbilanz an der Oberfläche
+        '''
+        if calc_T_surf is False:
             Theta_surf[i] = Theta_b[i] - Q[i] * R_th
 
         # Schneebilanzierung starten
         ''' Zeitschritt wird einmalig wiederholt, falls sich eine Schneeschicht beginnt zu bilden:
-            - Theta_surf[i] < 0 UND
-            - S_w[i] > 0 UND
-            - m_Rs[i]==0 (keine Restschneemenge vorhanden)
-            
+            - Oberflächentemperatur Theta_surf[i] < 0 UND
+            - Schneefallrate S_w[i] > 0 UND
+            - Restschneemenge m_Rs[i] == 0 (noch keine Restschneemenge vorhanden)
+            müssen erfüllt sein
+
             => Schnee bleibt liegen: Schneebilanz an Oberfläche
         '''
         if (Theta_surf[i] < 0 and S_w[i] > 0 and m_Rs[i] == 0):
             start_sb = True
             start_sb_counter[i] = 1
-            
-        print(f'Iter: {i+1}, Sim-Mode: {int(sim_mod[i])}')
-            
-    # Zeitstempel (Simulationsdauer)
+
+        # Konsolenausgabe des momentanen Zeitschritts
+        print(f'Zeitschritt {i+1} / {Nt}, Simulationsmodus: {int(sim_mod[i])}')
+
+    # Zeitstempel (Simulationsdauer) [s]
     toc = tim.time()
     print('Total simulation time: {} sec'.format(toc - tic))
-            
+
     # -------------------------------------------------------------------------
-    # 7.) zeitlich gemittelte Leistung & Gesamtenergie
+    # 7.) Energiekennzahlen
     # -------------------------------------------------------------------------
-            
-    # Leistung - über Zeitintervall gemittelt
-    interv = 72  # Zeitintervall der gemittelten Leistung
-    
-    Q_m = np.zeros(Nt)  # [W]
-    for i in range(0, Nt, interv):  # gemittelte Leistungen
-        interval = [x for x in Q[i:(i+interv)]]
-        Q_m[i:(i+interv)] = np.mean(interval)
-        
-    E_tot = (np.sum(Q) / len(Q)) * len(Q) / 1e6  # [MWh]
-    print(f'Dem Boden wurden {E_tot} MWh entnommen')
-    
+    ''' Q_m                 - zeitlich gemittelte Entzugsleistung [W]
+        E                   - Gesamtenergiemenge, die dem Boden entzogen wurde [MWh]
+        f_N [%] = E_N / E   - Nutzenergiefaktor [%]
+            E_N             - zur sensiblen Erwärmung und latenten Schmelze des Schnees verwendete Energie
+            E - E_N         - Summe der Verluste durch Konvektion, Strahlung und Verdunstung
+    '''
+
+    # gemittelte Entzugsleistung [W]
+    h_interv = 72                                   # Zeitintervall der gemittelten Entzugsleistung [h]
+
+    Q_m = np.zeros(Nt)
+    for i in range(0, Nt, h_interv):
+        Q_interv = [x for x in Q[i:(i+h_interv)]]
+        Q_m[i:(i+h_interv)] = np.mean(Q_interv)
+
+    # Gesamtenergiemenge [MWh]
+    E = (np.sum(Q) / len(Q)) * len(Q) / 1e6
+    print(f'Dem Boden wurden {round(E, 2)} MWh entnommen')
+
+    # Nutzenergiefaktor [%]
+    f_N = (np.sum(Q_N) / len(Q_N)) * len(Q_N) / 1e6 * 100
+    print(f'Davon wurden {round(f_N, 2)} % als Nutzenergie zur Schneeschmelze aufgewendet, der Rest sind Verluste an die Umgebung.')
+
     # -------------------------------------------------------------------------
     # 8.) Plots
     # -------------------------------------------------------------------------
-    
+
+    # x-Achse aller Plots (Simulationsstunden) [h]
     hours = np.array([(j+1)*dt/3600. for j in range(Nt)])
-    
+
     # -------------------------------------------------------------------------
     # 8.1) Figure 1
     # -------------------------------------------------------------------------
-    
+
     plt.rc('figure')
     fig1 = plt.figure()
 
@@ -267,20 +292,19 @@ def main():
     ax1.legend(['spezifische Entzugsleistung [W/m²]'],
                prop={'size': font['size'] - 5}, loc='upper right')
     ax1.grid('major')
-    
-    # Wasser- und Schneebilanzlinie (entspr. Wasserhöhe an der Oberfläche)
+
+    # Wasser- und Schneebilanzlinie (Wasserequivalent)
     ax2 = fig1.add_subplot(312)
     ax2.set_ylabel('[mm]')
     ax2.plot(hours, m_Rw / A_he, 'b-', lw=0.8)
     ax2.plot(hours, m_Rs / A_he, 'g-', lw=0.8)
     ax2.legend(['Wasserhöhe', 'Schneehöhe'],
-                          prop={'size': font['size'] - 5}, loc='upper left')
+               prop={'size': font['size'] - 5}, loc='upper left')
     ax2.grid('major')
 
     # Temperaturverläufe
     ax3 = fig1.add_subplot(313)
     ax3.set_ylabel(r'$T$ [°C]')
-    # plots
     ax3.plot(hours, Theta_b, 'r-', lw=1.2)
     ax3.plot(hours, Theta_surf, 'c-', lw=0.6)
     ax3.legend(['T_Bohrlochrand', 'T_Oberfläche'],
@@ -290,7 +314,7 @@ def main():
     # -------------------------------------------------------------------------
     # 8.2) Figure 2
     # -------------------------------------------------------------------------
-    
+
     plt.rc('figure')
     fig2 = plt.figure()
 
@@ -306,7 +330,7 @@ def main():
     ax4.legend(['sb_active', 'sim_mod'],
                prop={'size': font['size'] - 5}, loc='upper right')
     ax4.grid('major')
-    
+
     # Schneefallrate und -bilanzlinie
     ax5 = fig2.add_subplot(312)
     ax5_2 = ax5.twinx()
@@ -315,15 +339,14 @@ def main():
     ax5.plot(hours, S_w, 'b-', lw=0.8)
     ax5_2.plot(hours, m_Rs / A_he, 'g-', lw=0.8)
     ax5.legend(['Schneefallrate'],
-                          prop={'size': font['size'] - 5}, loc='upper left')
+               prop={'size': font['size'] - 5}, loc='upper left')
     ax5_2.legend(['Schneehöhe'],
-                          prop={'size': font['size'] - 5}, loc='upper right')
+                 prop={'size': font['size'] - 5}, loc='upper right')
     ax5.grid('major')
 
     # Temperaturverläufe
     ax6 = fig2.add_subplot(313)
     ax6.set_ylabel(r'$T$ [°C]')
-    # plots
     ax6.plot(hours, Theta_b, 'r-', lw=1.2)
     ax6.plot(hours, Theta_surf, 'c-', lw=0.6)
     ax6.legend(['T_Bohrlochrand', 'T_Oberfläche'],
@@ -343,7 +366,6 @@ def main():
     ax5.yaxis.set_minor_locator(AutoMinorLocator())
     ax6.xaxis.set_minor_locator(AutoMinorLocator())
     ax6.yaxis.set_minor_locator(AutoMinorLocator())
-    # plt.tight_layout()  # Fenstergröße anpassen
 
     return
 

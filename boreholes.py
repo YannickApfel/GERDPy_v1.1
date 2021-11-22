@@ -193,6 +193,7 @@ def visualize_field(borefield):
     ax0.set_xlabel('x (m)')
     ax0.set_ylabel('y (m)')
     ax0.set_title('Top view')
+    ax0.grid('major')
     plt.axis('equal')
     ax0.xaxis.set_minor_locator(AutoMinorLocator())
     ax0.yaxis.set_minor_locator(AutoMinorLocator())
@@ -227,7 +228,7 @@ def visualize_field(borefield):
     ax1.yaxis.set_minor_locator(AutoMinorLocator())
     ax1.zaxis.set_minor_locator(AutoMinorLocator())
 
-    # plt.tight_layout(rect=[0, 0.0, 0.95, 1.0])
+    plt.tight_layout(rect=[0, 0.0, 0.95, 1.0])
 
     return fig
 

@@ -165,10 +165,11 @@ def solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, Theta_b_0, R_t
         error = abs(F_Q(R_f, lat, S_w, A_he, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B))
         
     Q_lat_sol = Q_lat(lat, S_w, A_he)
+    Q_sen_sol = Q_sen_Q(Q, sen, S_w, Theta_inf, Theta_b_0, R_th, A_he)
     Q_eva_sol = Q_eva_Q(Q, eva, Theta_surf_0, m_Rw_0, Theta_inf, u_inf, h_NHN, Theta_b_0, R_th, Phi, A_he)
     Q_sol = Q
         
-    return Q_sol, Q_lat_sol, Q_eva_sol
+    return Q_sol, Q_lat_sol, Q_sen_sol, Q_eva_sol
 
 
 def solve_F_T(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B):
@@ -193,10 +194,11 @@ def solve_F_T(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, u_inf, Theta_s
         error = abs(F_T(R_f, lat, S_w, A_he, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B))
 
     Q_lat_sol = Q_lat(lat, S_w, A_he)
+    Q_sen_sol = Q_sen_T(Theta_surf, sen, S_w, Theta_inf, A_he)
     Q_eva_sol = Q_eva_T(Theta_surf, eva, Theta_surf_0, m_Rw_0, Theta_inf, u_inf, h_NHN, Phi, A_he)
     Theta_surf_sol = Theta_surf
     
-    return Theta_surf, Q_lat_sol, Q_eva_sol
+    return Theta_surf, Q_lat_sol, Q_sen_sol, Q_eva_sol
 
 
 def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, RR, m_Rw_0, m_Rs_0, start_sb):
@@ -260,7 +262,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
             sen, lat, eva = 0, 0, 0
             
             # 2.4) iterative Lösung der stationären Leistungsbilanz F_T = 0 am Heizelement (Oberfläche + Umgebung) nach T
-            Theta_surf_sol, Q_lat, Q_eva = solve_F_T(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
+            Theta_surf_sol, Q_lat, Q_sen, Q_eva = solve_F_T(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
 
             Q_sol = -1  # keine Entzugsleistung aus dem Boden
 
@@ -289,7 +291,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
                 sen, lat, eva = 0, 0, 0
 
                 # 2.7) iterative Lösung der stationären Leistungsbilanz F_Q = 0 am Heizelement (Erdboden + Oberfläche + Umgebung))
-                Q_sol, Q_lat, Q_eva = solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
+                Q_sol, Q_lat, Q_sen, Q_eva = solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
 
             else:  # Restleistung für Schneeschmelze vorhanden
             
@@ -331,7 +333,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
         R_f = 1  # free-area ratio
         
         # 2.2) iterative Lösung der stationären Leistungsbilanz F_Q = 0 am Heizelement (Erdboden + Oberfläche + Umgebung) nach Q.
-        Q_sol, Q_lat, Q_eva = solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
+        Q_sol, Q_lat, Q_sen, Q_eva = solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
 
         # 2.3) Fall Q. < 0
         if Q_sol < 0:  # kein Wärmeentzug aus Erdboden
@@ -344,7 +346,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
             sen, lat = 0, 0  # Energie zur Schneeschmelze kommt definitorisch aus dem Boden
             
             # 2.4) iterative Lösung der stationären Leistungsbilanz F_T = 0 am Heizelement (Oberfläche + Umgebung) nach T
-            Theta_surf_sol, Q_lat, Q_eva = solve_F_T(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
+            Theta_surf_sol, Q_lat, Q_sen, Q_eva = solve_F_T(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
 
     # 3.) Wasser- und Schneehöhenbilanz auf Heizelement
 
@@ -354,8 +356,10 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
     # Ermittlung Restschneemenge
     m_Rs_1 = m_Restschnee(m_Rs_0, S_w, A_he, Q_lat, sb_active)
 
-    # 4.) return an _main
+    # 4.) Entzugsleistung Q_sol und Nutzleistung Q_N
     if Q_sol < 0:  # Q. < 0 bei Gravitationswärmerohren nicht möglich
         Q_sol = 0
+        
+    Q_N = Q_lat + Q_sen
 
-    return Q_sol, calc_T_surf, Theta_surf_sol, m_Rw_1, m_Rs_1, sb_active, sim_mod
+    return Q_sol, Q_N, calc_T_surf, Theta_surf_sol, m_Rw_1, m_Rs_1, sb_active, sim_mod
