@@ -2,16 +2,12 @@
 """ GERDPy - Main-File
     Steuerungsfile des Auslegungstools für GERDI
 
-    Autor: Yannick Apfel
-
-    todos:
-        - GUI für End-User
-        - Kontrollstruktur für Wetterdaten (Errorhandling beim Einlesen)
-        
     Legende:
         - Temperaturen:
             - T in Kelvin [K] - für (kalorische) Gleichungen
             - Theta in Grad Celsius [°C] - Input aus dem Wetterdatenfile
+
+    Autor: Yannick Apfel
 """
 import sys
 import matplotlib.pyplot as plt
@@ -29,6 +25,7 @@ from R_th_tot import R_th_tot
 
 
 def main():
+
     # -------------------------------------------------------------------------
     # 1.) Parametrierung der Simulation (Geometrien, Stoffwerte, etc.)
     # -------------------------------------------------------------------------
@@ -78,7 +75,7 @@ def main():
     # 1.4) Heizelement
 
     # Fläche Heizelement [m2]
-    A_he = 50
+    A_he = 53
 
     # minimaler Oberflächenabstand [mm]
     x_min = 15
@@ -96,7 +93,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 1 * 12 * (8760./12) * 3600.              # Gesamt-Simulationsdauer [s]
+    tmax = 0.1 * 1 * (8760./12) * 3600.              # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -234,7 +231,7 @@ def main():
             start_sb_counter[i] = 1
 
         # Konsolenausgabe des momentanen Zeitschritts
-        print(f'Zeitschritt {i+1} / {Nt}, Simulationsmodus: {int(sim_mod[i])}')
+        print(f'Zeitschritt {i+1} von {Nt}, Simulationsmodus: {int(sim_mod[i])}')
 
     # Zeitstempel (Simulationsdauer) [s]
     toc = tim.time()
@@ -260,7 +257,7 @@ def main():
 
     # Gesamtenergiemenge [MWh]
     E = (np.sum(Q) / len(Q)) * len(Q) / 1e6
-    print(f'Dem Boden wurden {round(E, 2)} MWh entnommen')
+    print(f'Dem Boden wurden {round(E, 4)} MWh entnommen')
 
     # Nutzenergiefaktor [%]
     f_N = (np.sum(Q_N) / len(Q_N)) * len(Q_N) / 1e6 * 100
@@ -302,7 +299,7 @@ def main():
                prop={'size': font['size'] - 5}, loc='upper left')
     ax2.grid('major')
 
-    # Temperaturverläufe
+    # Temperaturverläufe Bohrlochrand und Oberfläche Heizelement
     ax3 = fig1.add_subplot(313)
     ax3.set_ylabel(r'$T$ [°C]')
     ax3.plot(hours, Theta_b, 'r-', lw=1.2)
@@ -344,7 +341,7 @@ def main():
                  prop={'size': font['size'] - 5}, loc='upper right')
     ax5.grid('major')
 
-    # Temperaturverläufe
+    # Temperaturverläufe Bohrlochrand und Oberfläche Heizelement
     ax6 = fig2.add_subplot(313)
     ax6.set_ylabel(r'$T$ [°C]')
     ax6.plot(hours, Theta_b, 'r-', lw=1.2)

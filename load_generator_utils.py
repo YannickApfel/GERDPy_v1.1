@@ -1,26 +1,23 @@
 # -*- coding: utf-8 -*-
-""" Unterfunktionen für load_generator.py
-        
+""" Stoffwerte und Unterfunktionen für 'load_generator.py'
+
     Legende:
         - Temperaturen:
             - T in Kelvin [K] - für (kalorische) Gleichungen
             - Theta in Grad Celsius [°C] - Input aus dem Wetterdatenfile
 
+    Quellen: [Konrad2009], [Fuchs2021], [ASHRAE2015]
+
     Autor: Yannick Apfel
 """
 import math, sys
-import sympy as sp
-import numpy as np
-import CoolProp.CoolProp as CP  # verwendete Unterfunktionen: PropsSI, HAPropsSI (humid air)
-from scipy.constants import sigma
+import CoolProp.CoolProp as CP
 
 
-# Definitionen
-
-# a) Stoffwerte
-lambda_l = 0.0262  # Wärmeleitfähigkeit von Luft (Normbedingungen) [W/m*K]
-a_l = lambda_l / (1.293 * 1005)  # T-Leitfähigkeit von Luft (Normbedingungen) [m²/s]
-theta_l = 13.3e-6   # kin. Vis. von Luft [m²/s]
+# Stoffwerte (Normbedingungen, wo nicht anders vermerkt)
+lambda_l = 0.0262  # Wärmeleitfähigkeit von Luft [W/m*K]
+a_l = lambda_l / (1.293 * 1005)  # T-Leitfähigkeit von Luft [m²/s]
+theta_l = 13.3e-6  # kin. Vis. von Luft [m²/s]
 rho_w = 997  # Dichte von Wasser (bei 25 °C) [kg/m³]
 rho_l = 1.33  # Dichte trockener Luft (bei 0 °C, 1 bar) [kg/m³]
 h_Ph_sl = 333e3  # Phasenwechselenthalpie Schnee <=> Wasser [J/kg]
@@ -34,11 +31,12 @@ H_max = 1  # maximal erlaubte Wasserhöhe auf dem Heizelement [mm]
 
 # korrigierte Windgeschwindigkeit (Wind-Shear) [m/s]
 def u_eff(v):
-    z_1 = 10  # Höhe, für die die Windgeschwindigkeit bekannt ist (Wetterdaten) [m]
+    z_1 = 10  # Höhe, für die Windgeschwindigkeit bekannt ist (Wetterdaten) [m]
     z_n = 1  # Bezugshöhe (liegt für das Problem definitorisch bei 1 m)
     z_0 = 0.005  # Rauhigkeitshöhe
 
-    return v * (math.log10(z_n) - math.log10(z_0)) / (math.log10(z_1) - math.log10(z_0))
+    return v * (math.log10(z_n) - math.log10(z_0)) / \
+        (math.log10(z_1) - math.log10(z_0))
 
 
 # höhenkorrigierter Umgebungsdruck [Pa]
@@ -63,11 +61,15 @@ def p_s_ASHRAE(T):  # Input in [K]
     C_13 = 6.5459673e0
 
     if ((T - 273.15) > -100) and ((T - 273.15) < 0):  # "over ice"
-        return math.exp(C_1 / T + C_2 + C_3 * T + C_4 * T ** 2 + C_5 * T ** 3 + C_6 * T ** 4 + C_7 * math.log(T))
+        return math.exp(C_1 / T + C_2 + C_3 * T + C_4 * T ** 2 + C_5 * T ** 3
+                        + C_6 * T ** 4 + C_7 * math.log(T))
     elif ((T - 273.15) >= 0) and ((T - 273.15) <= 200):  # "over liquid water"
-        return math.exp(C_8 / T + C_9 + C_10 * T + C_11 * T ** 2 + C_12 * T ** 3 + C_13 * math.log(T))
+        return math.exp(C_8 / T + C_9 + C_10 * T + C_11 * T ** 2
+                        + C_12 * T ** 3 + C_13 * math.log(T))
     else:
-        print('Interner Fehler: erlaubter T-Bereich für Sättigungs-Dampfdruckformel nach ASHRAE2013 unter-/überschritten!')
+        print('Interner Fehler: erlaubter T-Bereich für \
+              Sättigungs-Dampfdruckformel nach ASHRAE2013 \
+                  unter-/überschritten!')
         sys.exit()
 
 
@@ -99,7 +101,8 @@ def m_Restwasser(m_Rw_0, RR, A_he, Q_eva):
 # Schneemengen-Bilanz an Heizelement-Oberfläche
 def m_Restschnee(m_Rs_0, S_w, A_he, Q_lat, sb_active):
     if (sb_active == 1):
-        m_Rs_1 = m_Rs_0 + (S_w * rho_w * A_he) / 1000 - (Q_lat / h_Ph_sl) * 3600
+        m_Rs_1 = m_Rs_0 + (S_w * rho_w * A_he) / 1000 - (Q_lat / h_Ph_sl) \
+            * 3600
     else:
         m_Rs_1 = 0
 
@@ -107,6 +110,7 @@ def m_Restschnee(m_Rs_0, S_w, A_he, Q_lat, sb_active):
         m_Rs_1 = 0
 
     return m_Rs_1
+
 
 # Emissionskoeffizient des Heizelements [-]
 def epsilon_surf(material):
@@ -120,10 +124,10 @@ def epsilon_surf(material):
 def T_MS(S_w, Theta_inf, B, Phi):
     if S_w > 0:  # entspricht bei Schneefall der Umgebungstemperatur
         return (Theta_inf + 273.15)
-    else:  # ohne Schneefall: als Funtion von Umgebungstemp. und rel. Luftfeuchte
+    else:  # ohne Schneefall: Funktion von Umgebungstemp. und rel. Luftfeuchte
         T_H = (Theta_inf + 273.15) - (1.1058e3 - 7.562 * (Theta_inf + 273.15) +
-                                  1.333e-2 * (Theta_inf + 273.15) ** 2 - 31.292 *
-                                  Phi + 14.58 * Phi ** 2)
+                                      1.333e-2 * (Theta_inf + 273.15) ** 2
+                                      - 31.292 * Phi + 14.58 * Phi ** 2)
         T_W = (Theta_inf + 273.15) - 19.2
 
         if T_H > T_W:
@@ -153,16 +157,21 @@ def beta_c(Theta_inf, u, h_NHN):
 
 # Wasserdampfbeladung der gesättigten Luft bei Theta_inf [kg Dampf / kg Luft]
 def X_D_inf(Theta_inf, Phi, h_NHN):
-    # Sättigungsdampfdruck in der Umgebung bei Taupunkttemperatur: p_D = p_s_ASHRAE(T_tau(Theta_inf, Phi))
-    T_tau = CP.HAPropsSI('DewPoint', 'T', (Theta_inf + 273.15), 'P', 101325, 'R', Phi)  # Input in [K]
-    p_D = p_s_ASHRAE(T_tau)  # Input in [K]      
+    ''' Sättigungsdampfdruck in der Umgebung bei Taupunkttemperatur:
+        p_D = p_s_ASHRAE(T_tau(Theta_inf, Phi))
+    '''
+    T_tau = CP.HAPropsSI('DewPoint', 'T', (Theta_inf + 273.15),
+                         'P', 101325, 'R', Phi)  # Input in [K]
+    p_D = p_s_ASHRAE(T_tau)  # Input in [K]
 
     return 0.622 * p_D / (p_inf(h_NHN) - p_D)
 
 
 # Wasserdampfbeladung der gesättigten Luft bei Theta_surf [kg Dampf / kg Luft]
 def X_D_sat_surf(Theta_surf, h_NHN):
-    # Sättigungsdampfdruck an der Heizelementoberfläche bei Theta_surf: p_D = p_s_ASHRAE(Theta_surf)
+    ''' Sättigungsdampfdruck an der Heizelementoberfläche bei Theta_surf:
+        p_D = p_s_ASHRAE(Theta_surf)
+    '''
     p_D = p_s_ASHRAE(Theta_surf + 273.15)  # Input in [K]
 
     return 0.622 * p_D / (p_inf(h_NHN) - p_D)
