@@ -228,7 +228,7 @@ def visualize_field(borefield):
     ax1.yaxis.set_minor_locator(AutoMinorLocator())
     ax1.zaxis.set_minor_locator(AutoMinorLocator())
 
-    plt.tight_layout(rect=[0, 0.0, 0.95, 1.0])
+    # plt.tight_layout(rect=[0, 0.0, 0.95, 1.0])
 
     return fig
 

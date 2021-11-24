@@ -43,7 +43,7 @@ def main():
     # 1.2) Erdwärmesondenfeld
 
     # Geometrie-Import (.txt-Datei)
-    boreField = boreholes.field_from_file('./data/custom_field_32.txt')
+    boreField = boreholes.field_from_file('./data/custom_field_Eching.txt')
 
     # Sondenmeter (gesamt)  [m]
     H_field = boreholes.length_field(boreField)
@@ -75,7 +75,7 @@ def main():
     # 1.4) Heizelement
 
     # Fläche Heizelement [m2]
-    A_he = 53
+    A_he = 50
 
     # minimaler Oberflächenabstand [mm]
     x_min = 15
@@ -93,7 +93,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 0.1 * 1 * (8760./12) * 3600.              # Gesamt-Simulationsdauer [s]
+    tmax = 3 * 1 * (8760./12) * 3600.               # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -264,7 +264,7 @@ def main():
     print(f'Davon wurden {round(f_N, 2)} % als Nutzenergie zur Schneeschmelze aufgewendet, der Rest sind Verluste an die Umgebung.')
 
     # -------------------------------------------------------------------------
-    # 8.) Plots
+    # 8.) Plot
     # -------------------------------------------------------------------------
 
     # x-Achse aller Plots (Simulationsstunden) [h]
@@ -364,6 +364,8 @@ def main():
     ax6.xaxis.set_minor_locator(AutoMinorLocator())
     ax6.yaxis.set_minor_locator(AutoMinorLocator())
 
+    # plt.tight_layout()
+    
     return
 
 

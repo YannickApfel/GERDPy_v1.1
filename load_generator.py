@@ -140,7 +140,7 @@ def Q_lat(lat, S_w, A_he):
 
 
 # Leistungsbilanz F_Q {Erdboden, Oberfläche, Umgebung}, Fall Q >= 0
-def F_Q(R_f, lat, S_w, A_he, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B):
+def F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he):
 
     F_Q = Q_lat(lat, S_w, A_he) \
         + Q_sen_Q(Q, sen, S_w, Theta_inf, Theta_b_0, R_th, A_he) \
@@ -154,7 +154,7 @@ def F_Q(R_f, lat, S_w, A_he, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad
 
 
 # Leistungsbilanz F_T {Oberfläche, Umgebung}, Fall Q < 0
-def F_T(R_f, lat, S_w, A_he, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B):
+def F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he):
     F_T = Q_lat(lat, S_w, A_he) \
         + Q_sen_T(Theta_surf, sen, S_w, Theta_inf, A_he) \
         + R_f \
@@ -166,26 +166,26 @@ def F_T(R_f, lat, S_w, A_he, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, T
 
 
 # Solver für die Lösung der Leistungsbilanz F_Q := 0 nach Q
-def solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B):
+def solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he):
     step_refine = 0  # Hilfsvariable zur Verfeinerung der Schrittweite
-    step = 50  # doppelter Startwert als Iterationsschrittweite für Q
-    res = 0.01  # zulässiges Residuum für F_Q (Restfehler)
+    step = 30  # doppelter Startwert als Iterationsschrittweite für Q
+    res = 0.001  # zulässiges Residuum für F_Q (Restfehler)
 
     Q = 0  # Startwert für Q
 
-    error = abs(F_Q(R_f, lat, S_w, A_he, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B))
+    error = abs(F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he))
 
     while error > res:
-        if F_Q(R_f, lat, S_w, A_he, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B) > 0:
+        if F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) > 0:
             step_refine += 1
-            while F_Q(R_f, lat, S_w, A_he, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B) > 0:
+            while F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) > 0:
                 Q += (step / (2 * step_refine))  # Halbierung der Schrittweite für eine weitere Überschreitung/Unter- des Zielwerts
-        elif F_Q(R_f, lat, S_w, A_he, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B) < 0:
+        elif F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) < 0:
             step_refine += 1
-            while F_Q(R_f, lat, S_w, A_he, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B) < 0:
+            while F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) < 0:
                 Q -= (step / (2 * step_refine))  # Halbierung der Schrittweite für eine weitere Überschreitung/Unter- des Zielwerts
 
-        error = abs(F_Q(R_f, lat, S_w, A_he, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B))
+        error = abs(F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he))
 
     Q_lat_sol = Q_lat(lat, S_w, A_he)
     Q_sen_sol = Q_sen_Q(Q, sen, S_w, Theta_inf, Theta_b_0, R_th, A_he)
@@ -196,26 +196,26 @@ def solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, Theta_b_0, R_t
 
 
 # Solver für die Lösung der Leistungsbilanz F_T := 0 nach Theta_surf
-def solve_F_T(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B):
+def solve_F_T(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he):
     step_refine = 0  # Hilfsvariable zur Verfeinerung der Schrittweite
     step = 10  # doppelter Startwert als Iterationsschrittweite für T
     res = 0.01  # zulässiges Residuum für F_T (Restfehler)
 
     Theta_surf = 0  # Startwert für Q
 
-    error = abs(F_T(R_f, lat, S_w, A_he, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B))
+    error = abs(F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he))
 
     while error > res:
-        if F_T(R_f, lat, S_w, A_he, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B) > 0:
+        if F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) > 0:
             step_refine += 1
-            while F_T(R_f, lat, S_w, A_he, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B) > 0:
+            while F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) > 0:
                 Theta_surf -= (step / (2 * step_refine))  # Halbierung der Schrittweite für eine weitere Überschreitung/Unter- des Zielwerts
-        elif F_T(R_f, lat, S_w, A_he, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B) < 0:
+        elif F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) < 0:
             step_refine += 1
-            while F_T(R_f, lat, S_w, A_he, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B) < 0:
+            while F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) < 0:
                 Theta_surf += (step / (2 * step_refine))  # Halbierung der Schrittweite für eine weitere Überschreitung/Unter- des Zielwerts
 
-        error = abs(F_T(R_f, lat, S_w, A_he, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B))
+        error = abs(F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he))
 
     Q_lat_sol = Q_lat(lat, S_w, A_he)
     Q_sen_sol = Q_sen_T(Theta_surf, sen, S_w, Theta_inf, A_he)
@@ -252,7 +252,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
     sen = True
     lat = True
 
-    # 2.) Ermittlung Entzugsleistung Q_sol und Oberflächentemperatur T_surf_sol
+    # 2.) Ermittlung Entzugsleistung Q_sol und Oberflächentemperatur Theta_surf_sol
     if (sb_active == 1):  # "Schnee wird verzögert abgeschmolzen" (Bildung einer Schneedecke)
 
         ''' Erdboden, Heizelement-Oberfläche und Umgebung bilden ein stationäres System, wobei
@@ -286,7 +286,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
             sen, lat, eva = 0, 0, 0
 
             # 2.4) iterative Lösung der stationären Leistungsbilanz F_T = 0 am Heizelement (Oberfläche + Umgebung) nach T
-            Theta_surf_sol, Q_lat, Q_sen, Q_eva = solve_F_T(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
+            Theta_surf_sol, Q_lat, Q_sen, Q_eva = solve_F_T(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he)
 
             Q_sol = -1  # keine Entzugsleistung aus dem Boden
 
@@ -315,7 +315,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
                 sen, lat, eva = 0, 0, 0
 
                 # 2.7) iterative Lösung der stationären Leistungsbilanz F_Q = 0 am Heizelement (Erdboden + Oberfläche + Umgebung))
-                Q_sol, Q_lat, Q_sen, Q_eva = solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
+                Q_sol, Q_lat, Q_sen, Q_eva = solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he)
 
             else:  # Restleistung für Schneeschmelze vorhanden
 
@@ -357,7 +357,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
         R_f = 1  # free-area ratio
 
         # 2.2) iterative Lösung der stationären Leistungsbilanz F_Q = 0 am Heizelement (Erdboden + Oberfläche + Umgebung) nach Q.
-        Q_sol, Q_lat, Q_sen, Q_eva = solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
+        Q_sol, Q_lat, Q_sen, Q_eva = solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he)
 
         # 2.3) Fall Q. < 0
         if Q_sol < 0:  # kein Wärmeentzug aus Erdboden
@@ -370,7 +370,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
             sen, lat = 0, 0  # Energie zur Schneeschmelze kommt definitorisch aus dem Boden
 
             # 2.4) iterative Lösung der stationären Leistungsbilanz F_T = 0 am Heizelement (Oberfläche + Umgebung) nach T
-            Theta_surf_sol, Q_lat, Q_sen, Q_eva = solve_F_T(R_f, con, rad, eva, sen, lat, S_w, A_he, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B)
+            Theta_surf_sol, Q_lat, Q_sen, Q_eva = solve_F_T(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he)
 
     # 3.) Wasser- und Schneehöhenbilanz auf Heizelement
 
