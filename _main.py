@@ -57,8 +57,8 @@ def main():
     N = 10                                          # Anzahl Heatpipes pro Bohrloch [-]
     r_b = boreField[0].r_b                          # Radius der Erdwärmesondenbohrung [m]
     r_w = 0.07                                      # Radius der Wärmerohr-Mittelpunkte [m]
-    r_pa = 0.006                                    # Außenradius der Isolationsschicht [m]
-    r_iso = 0.006                                   # Innenradius der Isolationsschicht [m]
+    r_iso_a = 0.006                                    # Außenradius der Isolationsschicht [m]
+    r_pa = 0.006                                   # Außenradius des Wärmerohrs [m]
     r_pi = 0.0053                                   # Innenradius des Wärmerohrs [m]
 
     # Wärmeleitfähigkeiten [W/mK]
@@ -67,7 +67,7 @@ def main():
     lambda_p = 14                                   # Heatpipe
 
     # Geometrie-Erstellung
-    hp = heatpipes.Heatpipes(N, r_b, r_w, r_pa, r_iso, r_pi, lambda_b,
+    hp = heatpipes.Heatpipes(N, r_b, r_w, r_iso_a, r_pa, r_pi, lambda_b,
                              lambda_iso, lambda_p)
     # Layout-Plot der Wärmerohrkonfiguration
     hp.visualize_hp_config()
@@ -77,14 +77,25 @@ def main():
     # Fläche Heizelement [m2]
     A_he = 50
 
-    # minimaler Oberflächenabstand [mm]
-    x_min = 15
+    # minimaler Oberflächenabstand [m]
+    x_min = .015
 
     # Wärmeleitfähigkeit des Betonelements [W/mk]
     lambda_Bet = 2
+    
+    # Mittelachsabstand der Kondensatrohre im Heizelement [m]
+    s_R = .055
+    
+    # Gesamtlänge im Heizelement verbauter Kondensatrohre [m]
+    l_R = 1
+    
+    # Betondicke des Heizelements [m]
+    Dicke_he = 0.25
 
     # Geometrie-Erstellung
-    he = heating_element.HeatingElement(A_he, x_min, lambda_Bet)
+    he = heating_element.HeatingElement(A_he, x_min, lambda_Bet, lambda_p, 
+                                        2 * r_pa, 2 * r_pi, s_R, l_R, 
+                                        Dicke_he)
 
     # 2.) Simulation
 
