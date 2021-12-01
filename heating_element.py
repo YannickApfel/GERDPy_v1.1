@@ -13,7 +13,7 @@ class HeatingElement(object):
                     Fläche des Heizelements.
     x_min:          float [m]
                     minimaler Oberflächenabstand der Verrohrung (Überdeckung)
-    lambda_Bet:     float [W/mK]
+    lambda_B:       float [W/mK]
                     Wärmeleitfähigkeit des Betonelements
     lambda_R:       float [W/mK]
                     Wärmeleitfähigkeit der Kondensatrohre
@@ -29,11 +29,11 @@ class HeatingElement(object):
                     Betondicke des Heizelements
     """
 
-    def __init__(self, A_he, x_min, lambda_Bet, lambda_R, d_R_a, d_R_i, s_R,
+    def __init__(self, A_he, x_min, lambda_B, lambda_R, d_R_a, d_R_i, s_R,
                  l_R, D):
         self.A_he = float(A_he)
         self.x_min = float(x_min)
-        self.lambda_Bet = float(lambda_Bet)
+        self.lambda_B = float(lambda_B)
         self.lambda_R = float(lambda_R)
         self.d_R_a = float(d_R_a)
         self.d_R_i = float(d_R_i)
@@ -43,7 +43,7 @@ class HeatingElement(object):
 
     def __repr__(self):
         s = ('HeatingElement(A_he={self.A_he}, x_min={self.x_min}, \
-             lambda_Bet={self.lambda_Bet}, lambda_R={self.lambda_R},'
+             lambda_B={self.lambda_B}, lambda_R={self.lambda_R},'
              ' d_R_a={self.d_R_a}, d_R_i={self.d_R_i}, \
                      s_R={self.s_R}, l_R={self.l_R}, D={self.D} \
                          ').format(self=self)
