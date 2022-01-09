@@ -40,7 +40,7 @@
 """
 from scipy.constants import sigma
 
-# Import des physikalischen Modells
+# Import der physikalischen Modellgleichungen
 from load_generator_utils import *
 
 
@@ -235,9 +235,8 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
     calc_T_surf = False  # "True" falls Oberlächentemp. bereits in diesem Modul ermittelt wird
     Theta_surf_sol = None
 
-    ''' Simulationsmodi:
-        - "Schnee wird verzögert abgeschmolzen" (Bildung einer Schneedecke)
-        - Schnee wird instantan (=innerhalb des Zeitschritts) abgeschmolzen
+    ''' Simulationsmodi 1-3: Schnee wird verzögert abgeschmolzen (Bildung einer Schneedecke über mehrere Zeitschritte)
+        Simulationsmodi 4-5: Schnee wird instantan (=innerhalb des Zeitschritts) abgeschmolzen
     '''
     # Simulationsmodus ermitteln:
     if (m_Rs_0 > 0 or start_sb is True):  # Schneedecke bildet sich
@@ -253,6 +252,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
     lat = True
 
     # 2.) Ermittlung Entzugsleistung Q_sol und Oberflächentemperatur Theta_surf_sol
+    ''' Simulationsmodi 1-3'''
     if (sb_active == 1):  # "Schnee wird verzögert abgeschmolzen" (Bildung einer Schneedecke)
 
         ''' Erdboden, Heizelement-Oberfläche und Umgebung bilden ein stationäres System, wobei
@@ -261,21 +261,26 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
             - Q._R = Q._0 - (Q._con + Q._rad + Q._eva) ergibt die zur Schneeschmelze (= Q._lat + Q._sen) vor-
             handene restliche Leistung
 
-            Die Leistungsbilanz Q. = Q._lat + Q._sen + R_f(Q._con + Q._rad + Q._eva) wird nach
-             - Q. -> Fall Q. >= 0 (Leistungsentzug aus dem Boden) oder
-             - Theta_surf -> Fall Q. < 0 (kein Leistungsentzug aus dem Boden)
-            aufgelöst, falls Q._R < 0 (keine Restleistung f. Schneeschmelze vorhanden) bzw.
-            Q._0 < 0 (kein Wärmeentzug aus dem Boden möglich - kein delta-T vorhanden)
+            - Simulationsmodus 1: Q._0 < 0, Lösung von F_T nach Theta_surf
+            (kein Wärmeentzug aus dem Boden möglich, da kein delta-T vorhanden - sibirische Verhältnisse)
+            
+            - Simulationsmodus 2: Q._R < 0, Lösung von F_Q nach Q.
+            (keine Restleistung zur Schneeschmelze vorhanden, Leistung geht für Konvektions- und Strahlungsverluste drauf)
+            
+            - Simulationsmodus 3: Q._R > 0, setze Theta_surf := Theta_Schmelz (Oberfläche mit Wasser benetzt)
+            (Q._R wird zur Schneeschmelze verwendet)
+            
         '''
 
         # 2.1) Pre-Processing
-        R_f = 0.25  # free-area ratio
+        R_f = 0.2  # free-area ratio
         Theta_surf_0 = Theta_Schm  # Fixieren der Oberflächentemperatur
 
         # 2.2) verfügbare Entzugsleistung
         Q_0 = (Theta_b_0 - Theta_surf_0) * R_th ** -1
 
         # 2.3) Fallunterscheidung Entzugsleistung Q_0
+        ''' Simulationsmodus 1'''
         if Q_0 < 0:  # keine nutzbare T-Differenz im Boden vorhanden (sibirische Verhältnisse)
 
             sim_mod = 1  # Simulationsmodus aufzeichnen
@@ -291,7 +296,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
             Q_sol = -1  # keine Entzugsleistung aus dem Boden
 
         else:  # Q_0 >= 0 nutzbare T-Differenz im Boden vorhanden (Regelfall)
-
+            ''' Simulationsmodi 2 & 3'''
             # 2.4) Verlustleistungsterme (explizit für Theta_surf_0 = Theta_Schm formuliert)
 
             # Q_Konvektion
@@ -307,6 +312,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
             Q_R = Q_0 - R_f * (Q_con + Q_rad + Q_eva)
 
             # 2.6) Fallunterscheidung Restleistung Q_R
+            ''' Simulationsmodus 2'''
             if Q_R < 0:  # keine Restleistung für Schneeschmelze vorhanden
 
                 sim_mod = 2  # Simulationsmodus aufzeichnen
@@ -318,7 +324,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
                 Q_sol, Q_lat, Q_sen, Q_eva = solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he)
 
             else:  # Restleistung für Schneeschmelze vorhanden
-
+                ''' Simulationsmodus 3'''
                 sim_mod = 3  # Simulationsmodus aufzeichnen
 
                 calc_T_surf = True
@@ -341,16 +347,16 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
                 Theta_surf_sol = Theta_Schm
                 Q_sol = Q_0
 
+                ''' Simulationsmodi 4 & 5'''
+                ''' Erdboden, Heizelement-Oberfläche und Umgebung bilden ein stationäres System, wobei sich
+                        die Oberflächentemp. Theta_surf entsprechend der Oberflächenlasten ergibt.
+                        Die Leistungsbilanz F_Q = Q._lat + Q._sen + R_f(Q._con + Q._rad + Q._eva) - Q. wird für
+                        - Fall Q. >= 0 (Leistungsentzug aus dem Boden) nach Q. aufgelöst - Simulationsmodus 4
+                        - Fall Q. < 0 : Lösung der vereinfachten Leistungsbilanz F_T = F_Q(Q.=0) nach Theta_surf
+                            (kein Leistungsentzug aus dem Boden, Umgebung erwärmt Heizelement) - Simulationsmodus 5
+                '''
     else:  # Schnee wird instantan abgeschmolzen (keine Bildung einer Schneedecke)
-
-        ''' Erdboden, Heizelement-Oberfläche und Umgebung bilden ein stationäres System, wobei sich
-            die Oberflächentemp. T_surf entsprechend der Oberflächenlasten ergibt.
-            Die Leistungsbilanz F_Q = Q._lat + Q._sen + R_f(Q._con + Q._rad + Q._eva) - Q. wird für
-            - Fall Q. >= 0 (Leistungsentzug aus dem Boden) nach Q. aufgelöst
-            - Fall Q. < 0 : Lösung der vereinfachten Leistungsbilanz F_T = F_Q(Q.=0) nach Theta_surf
-                (kein Leistungsentzug aus dem Boden, Umgebung erwärmt Heizelement)
-        '''
-
+        ''' Simulationsmodus 4'''
         sim_mod = 4  # Simulationsmodus aufzeichnen
 
         # 2.1) Pre-Processing
@@ -360,6 +366,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
         Q_sol, Q_lat, Q_sen, Q_eva = solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he)
 
         # 2.3) Fall Q. < 0
+        ''' Simulationsmodus 5'''
         if Q_sol < 0:  # kein Wärmeentzug aus Erdboden
 
             sim_mod = 5  # Simulationsmodus aufzeichnen

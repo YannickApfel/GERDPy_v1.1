@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """ GERDPy - Main-File
-    Steuerungsfile des Auslegungstools für GERDI
+    Steuerungsfile des Auslegungstools für das Projekt GERDI
 
     Legende:
         - Temperaturen:
@@ -19,9 +19,10 @@ from scipy.constants import pi
 # import GERDPy-modules
 import boreholes, heatpipes, heating_element, gfunction, load_aggregation
 from load_generator import *
+from R_th_tot import *
 from weather_data import get_weather_data
 from geometrycheck import check_geometry
-from R_th_tot import R_th_tot
+from thermal_losses import Q_V_An
 
 
 def main():
@@ -51,7 +52,7 @@ def main():
     # Layout-Plot des Erdwärmesondenfelds
     boreholes.visualize_field(boreField)
 
-    # 1.3) Bohrloch
+    # 1.3) Bohrloch & Anbindung zum Heizelement (An)
 
     # Geometrie
     N = 10                                          # Anzahl Heatpipes pro Bohrloch [-]
@@ -71,6 +72,9 @@ def main():
                              lambda_iso, lambda_p)
     # Layout-Plot der Wärmerohrkonfiguration
     hp.visualize_hp_config()
+    
+    # Gesamtlänge der Anbindungen aller Sonden zum Heizelement (entspricht in etwa horizontalem Abstand) [m]
+    l_R_An = 7
 
     # 1.4) Heizelement
 
@@ -78,17 +82,17 @@ def main():
     A_he = 50
 
     # minimaler Oberflächenabstand [m]
-    x_min = .015
+    x_min = .025
 
     # Wärmeleitfähigkeit des Betonelements [W/mk]
-    lambda_Bet = 2
-    
+    lambda_Bet = 2.1
+
     # Mittelachsabstand der Kondensatrohre im Heizelement [m]
-    s_R = .055
-    
+    s_R = .050
+
     # Gesamtlänge im Heizelement verbauter Kondensatrohre [m]
-    l_R = 1
-    
+    l_R = 1000
+
     # Betondicke des Heizelements [m]
     Dicke_he = 0.25
 
@@ -104,7 +108,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 3 * 1 * (8760./12) * 3600.               # Gesamt-Simulationsdauer [s]
+    tmax = 1 * 1 * (8760./12) * 3600.               # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -122,10 +126,11 @@ def main():
         print(50*'-')
 
     # -------------------------------------------------------------------------
-    # 3.) Ermittlung thermischer Widerstand Bohrlochrand bis Oberfläche
+    # 3.) Ermittlung thermischer Widerstände von Bohrlochrand bis Oberfläche
     # -------------------------------------------------------------------------
 
-    R_th = R_th_tot(lambda_g, boreField, hp, he)    # [K/W]
+    R_th = R_th_tot(lambda_g, boreField, hp, he)  # Gesamtsystem
+    R_th_ghp = R_th_g_hp(lambda_g, boreField, hp)  # Boden bis Heatpipes
 
     # -------------------------------------------------------------------------
     # 4.) Ermittlung der G-Function (Bodenmodell)
@@ -168,7 +173,7 @@ def main():
 
     # Initialisierung Temperaturen [°C]
     ''' Vektoren:
-            Q[i] - Entzugsleistung f. Zeitschritt i 
+            P[i] - Entzugsleistung f. Zeitschritt i 
             Theta_surf[i] - Oberflächentemp. f. Zeitschritt i
     '''
     Theta_b = np.zeros(Nt)                          # Bohrlochrand
@@ -180,9 +185,10 @@ def main():
     # Initialisierung Vektor für Restschneemenge [mm - Wasserequivalent]
     m_Rs = np.zeros(Nt)
 
-    # Initialisierung Gesamt-Entzugsleistung und Nutzleistung [W]
+    # Initialisierung Gesamt-Entzugsleistung, Nutzleistung und Verluste [W]
     Q = np.zeros(Nt)
     Q_N = np.zeros(Nt)
+    Q_V = np.zeros(Nt)
 
     print('Simulating...')
 
@@ -205,12 +211,30 @@ def main():
             Q[i], Q_N[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = \
                 load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g,
                      R_th, Theta_g, B[i], Phi[i], RR[i], 0, 0, start_sb)
+            
+             # thermische Verluste der Anbindung Q_V_An [W]
+            ''' Q wird um Q_V_An, der Verlustleistung der Anbindung zwischen Erdwärmesonden und Oberflächenelement, vergrößert
+                (die thermischen Verluste der Anbindung werden abgeschätzt und auf den Leistungsentzug addiert)
+                Q_V_An[i] > 0, falls der Leistungsentzug aus dem Boden positiv, sprich Q[i] >= 0 (if-Statement)
+            '''
+            if calc_T_surf is False:
+                Q_V[i] = Q_V_An(Theta_g, Q[i], R_th_ghp, Theta_inf[i], lambda_p, l_R_An, N, r_pa, r_pi)
+                Q[i] += Q_V[i]
 
         # Ermittlung der Entzugsleistung im Zeitschritt 2, 3, ..., Nt
         if i > 0:
             Q[i], Q_N[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = \
                 load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], 
                      R_th, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1], m_Rs[i-1], start_sb)
+                
+            # thermische Verluste der Anbindung Q_V_An [W]
+            ''' Q wird um Q_V_An, der Verlustleistung der Anbindung zwischen Erdwärmesonden und Oberflächenelement, vergrößert
+                (die thermischen Verluste der Anbindung werden abgeschätzt und auf den Leistungsentzug addiert)
+                Q_V_An[i] > 0, falls der Leistungsentzug aus dem Boden positiv, sprich Q[i] >= 0 (if-Statement)
+            '''
+            if calc_T_surf is False:
+                Q_V[i] = Q_V_An(Theta_b[i-1], Q[i], R_th_ghp, Theta_inf[i], lambda_p, l_R_An, N, r_pa, r_pi)
+                Q[i] += Q_V[i]
 
         start_sb = False  # Variable Start-Schneebilanzierung zurücksetzen
 
@@ -223,10 +247,11 @@ def main():
 
         # Temperatur an der Oberfläche des Heizelements [°C]
         ''' Theta_surf wird hier nur ermittelt, falls Q. >= 0 (positive Entzugsleistung aus Boden), sonst
-            erfolgt deren Ermittlung in 'load_generator.py' mit Hilfe einer vereinfachten Leistungsbilanz an der Oberfläche
+            erfolgt deren Ermittlung in 'load_generator.py' mit Hilfe einer vereinfachten Leistungsbilanz an der Oberfläche.
         '''
         if calc_T_surf is False:
-            Theta_surf[i] = Theta_b[i] - Q[i] * R_th
+            Theta_surf[i] = Theta_b[i] - Q[i] * R_th  # Oberflächentemp.
+
 
         # Schneebilanzierung starten
         ''' Zeitschritt wird einmalig wiederholt, falls sich eine Schneeschicht beginnt zu bilden:

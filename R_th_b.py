@@ -25,7 +25,7 @@ def R_th_b(lambda_g, borefield, hp):
     # Geometrie Heatpipes
     N = hp.N                            # Anzahl Heatpipes im Bohrloch [-]
     r_pa = hp.r_pa                      # Außenradius Wärmerohr (mit Iso) [m]
-    r_iso = hp.r_iso                    # Innenradius Ummantelung [m]
+    r_iso = hp.r_iso_a                    # Innenradius Ummantelung [m]
     r_pi = hp.r_pi                      # Innenradius Wärmerohr [m]
 
     # Wärmeleitfähigkeiten [W/mK]:

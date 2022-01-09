@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """ Analytische Reihenlösung für den Wärmestrom in einem Rohrregister mit
-    äquidistanten Rohren nach VDI 2055-1
+    äquidistanten Rohren nach VDI 2055-1 (T-Randbedingung)
 
     q_l - Wärmeleistung pro Meter verbautem Rohr [W/m]
 
@@ -48,19 +48,21 @@ def sum_fct(kappa_o, kappa_u, s, s_c, x_o, x_u, lambda_B):
 
 
 # analyt. Lösung aus VDI 2055-1 (Wärmeleistung pro Rohrmeter)
-def q_l(x_o, d_R_a, d_R_i, lambda_B, lambda_R, s, Theta_R, Theta_inf_o):  # [W/m]
+def q_l(x_o, x_u, d_R_a, d_R_i, lambda_B, lambda_R, s, Theta_R, Theta_inf_o, state_u_insul):  # [W/m]
 
-    # 1.) zusätzliche geometrische Größen für Schichtung und Unterseite (optional)
+    # 1.) zusätzliche geometrische Größen
     s_c = 0.0  # [m] -> setze 0, da keine Zusatzschichten vorhanden
-    x_u = 1e10  # [m] -> Wärmeverluste einseitig (halbunendlicher Raum)
+    d_insul_a = d_R_a + 0.0002  # Option: Modellierung Kontaktwiderstand als Luftschicht (1/10 mm)
 
-    d_insul_a = d_R_a + 0  # Option: Modellierung Kontaktwiderstand als Isolationsschicht
-
-    # 2.) zusätzliche therm. Größen für Schichtung und Unterseite (optional)
-    Theta_inf_u = 0
-    lambda_insul = 0.035
-    alpha_o = 1e10  # großer WÜK an der Oberfläche, da T-RB.
-    alpha_u = 1e-10  # andere Seite ist quasi isoliert
+    # 2.) zusätzliche therm. Größen
+    Theta_inf_u = Theta_inf_o
+    lambda_insul = 0.0262  # Luft
+    alpha_o = 1e10  # WÜK an Oberseite --> unendlich, da T-RB
+    alpha_u = alpha_o
+    
+    if state_u_insul:
+        alpha_u = 1e-10  # WÜK an Unterseite: --> 0, isoliert
+        x_u = 1e10  # x_u überschreiben mit halbunendlichem Raum
 
     # 3.) Wärmedurchgänge  [W/m²K]
     kappa_o = (1 / alpha_o + s_c / lambda_B) ** -1
