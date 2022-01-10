@@ -13,11 +13,9 @@
         - Theta_b < Theta_surf: Lösung der reduzierten Leistungsbilanz 
             F_T = 0, Q. := 0 (kein Wärmeentzug aus dem Boden)
 
-            {Oberfläche + Umgebung} -> Auflösung nach Theta_surf
+            {Oberfläche + Umgebung} -> Auflösung nach Theta_surf (Oberflächentemperatur)
 
     Definition der Einzellasten:
-    - Nutzleistung: Q._N = Q._lat + Q._sen
-    - Verlustleistung: Q._V = Q._con + Q._rad + Q._eva
 
         lat - latent
         sen - sensibel
@@ -35,6 +33,15 @@
             - Theta in Grad Celsius [°C] - Input aus dem Wetterdatenfile
 
     Algorithmus basierend in Teilen auf [Konrad2009]
+    
+    Anmerkungen zu Variablen:
+        - calc_T_surf:
+            - "False": Leistungsentzug aus dem Boden Q >= 0 (positiv), Oberflächentemp. Theta_surf wird in "main.py" ermittelt
+            (Simulationsmodi 2 und 4)
+            - "True": kein Leistungsentzug aus dem Boden, Oberflächentemp. Theta_surf wird in "load_generator.py" ermittelt
+        - sb_active:
+            - "True": Schneeschichtbilanzierung aktiv (es kann sich eine Schneeschicht bilden)
+            - "False": Schneeschichtbilanzierung inaktiv (die Schneelast wird in jedem Zeitschritt abgeschmolzen, keine Bildung einer Schneedecke)
 
     Autor: Yannick Apfel
 """
@@ -42,6 +49,7 @@ from scipy.constants import sigma
 
 # Import der physikalischen Modellgleichungen
 from load_generator_utils import *
+from thermal_losses import *
 
 
 # Q_Konvektion = fkt(Q.) - Input für Leistungsbilanz F_Q = 0
@@ -225,7 +233,15 @@ def solve_F_T(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, u_inf, Theta_surf_0,
     return Theta_surf, Q_lat_sol, Q_sen_sol, Q_eva_sol
 
 
-def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, RR, m_Rw_0, m_Rs_0, start_sb):
+def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, B, Phi, RR, m_Rw_0, m_Rs_0, start_sb, 
+         l_An, lambda_p, lambda_iso, r_iso, r_pa, r_pi):
+    ''' Hauptfunktion zur Ermittlung der Entzugsleistung pro Zeitschritt, Aufteilung in:
+        - Q_sol: aus Oberflächenbilanzen ermittelte thermische Leistung der Oberfläche
+        - Q_N: Anteil von Q_sol, der tatsächlich zur Schneeschmelze benutzt wird - also Q_sol abzügl. Oberflächenverlusten Q_con, Q_rad, Q_eva
+        - Q_V: Verlustleistungen (gehen nicht in Oberflächenbilanz ein)
+            - Anbindung (An) zwischen Bohrloch und Heizelement (Heatpipes)
+            - Unterseite Heizelement (He)
+    '''
     # Theta_x_0: Temp. des vorhergehenden Zeitschritts
 
     # 0.) Preprocessing
@@ -235,7 +251,7 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
     calc_T_surf = False  # "True" falls Oberlächentemp. bereits in diesem Modul ermittelt wird
     Theta_surf_sol = None
 
-    ''' Simulationsmodi 1-3: Schnee wird verzögert abgeschmolzen (Bildung einer Schneedecke über mehrere Zeitschritte)
+    ''' Simulationsmodi 1-3: Schnee wird verzögert abgeschmolzen (Bildung einer Schneedecke ist möglich)
         Simulationsmodi 4-5: Schnee wird instantan (=innerhalb des Zeitschritts) abgeschmolzen
     '''
     # Simulationsmodus ermitteln:
@@ -387,10 +403,15 @@ def load(h_NHN, v, Theta_inf, S_w, A_he, Theta_b_0, R_th, Theta_surf_0, B, Phi, 
     # Ermittlung Restschneemenge
     m_Rs_1 = m_Restschnee(m_Rs_0, S_w, A_he, Q_lat, sb_active)
 
-    # 4.) Entzugsleistung Q_sol und Nutzleistung Q_N
+    # 4.) Entzugsleistung Q_sol, Nutzleistung Q_N und Verlustleistung Q_V (Anbindung und Unterseite Heizelement) [W]
     if Q_sol < 0:  # Q. < 0 bei Gravitationswärmerohren nicht möglich
         Q_sol = 0
 
     Q_N = Q_lat + Q_sen
 
-    return Q_sol, Q_N, calc_T_surf, Theta_surf_sol, m_Rw_1, m_Rs_1, sb_active, sim_mod
+    Q_V = Q_V_An(Theta_b_0 - Q_sol * R_th_ghp, Theta_inf, lambda_p, lambda_iso, l_An, r_iso, r_pa, r_pi) \
+            # + Q_V_He()
+    if Q_V < 0:  # Q. < 0 bei Gravitationswärmerohren nicht möglich
+        Q_V = 0
+
+    return Q_sol, Q_N, Q_V, calc_T_surf, Theta_surf_sol, m_Rw_1, m_Rs_1, sb_active, sim_mod
