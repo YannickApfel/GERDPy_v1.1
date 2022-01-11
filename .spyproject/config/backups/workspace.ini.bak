@@ -6,5 +6,5 @@ save_non_project_files = False
 
 [main]
 version = 0.2.0
-recent_files = ['R_th_tot.py', '_main.py', 'thermal_losses.py', 'load_generator_utils.py', 'load_generator.py']
+recent_files = ['R_th_tot.py', '_main.py', 'load_generator_utils.py', 'load_generator.py', 'thermal_losses.py', 'R_th_hp.py']
 

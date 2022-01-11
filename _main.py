@@ -75,8 +75,8 @@ def main():
     # 1.4) Anbindung zum Heizelement (zusätzliche Größen)
     
     # Geometrie
-    D_iso = 0.01                                    # Dicke der Isolationsschicht [m]
-    r_iso_An = r_pa + D_iso                         # Außenradius der Isolationsschicht [m]
+    D_iso_An = 0.01                                    # Dicke der Isolationsschicht [m]
+    r_iso_An = r_pa + D_iso_An                         # Außenradius der Isolationsschicht [m]
         
     # Länge der Anbindungen zwischen Bohrlöchern und Heizelement (ab Geländeoberkante) [m]
     ''' l_R_An * N ergibt die Gesamtlänge an Heatpipe im Bereich der Anbindung
@@ -101,12 +101,15 @@ def main():
     l_R = 1000
 
     # Betondicke des Heizelements [m]
-    Dicke_he = 0.25
+    D_he = 0.25
+    
+    # Dicke der Isolationsschicht an der Unterseite [m]
+    D_iso_he = 0.01
 
     # Geometrie-Erstellung
     he = heating_element.HeatingElement(A_he, x_min, lambda_Bet, lambda_p, 
                                         2 * r_pa, 2 * r_pi, s_R, l_R, 
-                                        Dicke_he)
+                                        D_he, D_iso_he)
 
     # 2.) Simulation
 
@@ -216,14 +219,14 @@ def main():
         # Ermittlung der Entzugsleistung im 1. Zeitschritt
         if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g, Heizelementoberfläche trocken und schneefrei
             Q[i], Q_N[i], Q_V[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = \
-                load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_g,
+                load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], he, Theta_g,
                      R_th, R_th_ghp, Theta_g, B[i], Phi[i], RR[i], 0, 0, start_sb, 
                      l_R_An * N, lambda_p, lambda_iso, r_iso_An, r_pa, r_pi)
 
         # Ermittlung der Entzugsleistung im Zeitschritt 2, 3, ..., Nt
         if i > 0:
             Q[i], Q_N[i], Q_V[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = \
-                load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], A_he, Theta_b[i-1], 
+                load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], he, Theta_b[i-1], 
                      R_th, R_th_ghp, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1], m_Rs[i-1], start_sb, 
                      l_R_An * N, lambda_p, lambda_iso, r_iso_An, r_pa, r_pi)
                 
@@ -260,7 +263,7 @@ def main():
             start_sb_counter[i] = 1
 
         # Konsolenausgabe des momentanen Zeitschritts
-        print(f'Zeitschritt {i+1} von {Nt}, Simulationsmodus: {int(sim_mod[i])}')
+        print(f'Zeitschritt {i+1} von {Nt}')
 
     # Zeitstempel (Simulationsdauer) [s]
     toc = tim.time()
@@ -277,7 +280,7 @@ def main():
     '''
 
     # gemittelte Entzugsleistung [W]
-    h_interv = 72                                   # Zeitintervall der gemittelten Entzugsleistung [h]
+    h_interv = 24                                   # Zeitintervall der gemittelten Entzugsleistung [h]
 
     Q_m = np.zeros(Nt)
     for i in range(0, Nt, h_interv):
@@ -286,12 +289,14 @@ def main():
 
     # Gesamtenergiemenge [MWh]
     E = (np.sum(Q) / len(Q)) * Nt * 1e-6
+    print(50*'-')
     print(f'Dem Boden wurden {round(E, 4)} MWh entnommen')
 
     # Nutzenergiefaktor [%]
     f_N = (np.sum(Q_N) / len(Q_N)) / (np.sum(Q) / len(Q)) * 100
     print(f'Davon wurden {round(f_N, 2)} % als Nutzenergie zur Schneeschmelze aufgewendet, der Rest sind Verluste an die Umgebung.')
-
+    print(50*'-')
+    
     # -------------------------------------------------------------------------
     # 8.) Plot
     # -------------------------------------------------------------------------
@@ -312,23 +317,24 @@ def main():
     # Lastprofil (thermische Leistung Q. über die Simulationsdauer)
     ax1 = fig1.add_subplot(311)
     ax1.set_ylabel(r'$q$ [W/m2]')
-    ax1.plot(hours, Q / A_he, 'k-', lw=1.2)
-    ax1.plot(hours, Q_V / A_he, 'g--', lw=1.2)
-    ax1.plot(hours, Q_m / A_he, 'r-', lw=2)
-    ax1.legend(['Entzugsleistung [W/m2]', 'Verluste (Anbindung + Unterseite Heizelement)'],
-               prop={'size': font['size'] - 5}, loc='upper right')
+    ax1.plot(hours, Q / A_he, 'k-', lw=2)
+    ax1.plot(hours, Q_V / A_he, 'g-', lw=1.2)
+    ax1.plot(hours, Q_m / A_he, 'r--', lw=1.2)
+    ax1.legend(['Entzugsleistung', 'Verluste (Anbindung + Unterseite Heizelement)',
+                'Entzugsleistung-24h-gemittelt'],
+               prop={'size': font['size'] - 5}, loc='upper left')
     ax1.grid('major')
 
     # Schneefallrate
     ax2 = fig1.add_subplot(312)
     ax2_2 = ax2.twinx()
     ax2.set_ylabel('Schneefallrate [mm/h]')
-    ax2_2.set_ylabel('Umgebungstemperatur [degC]')
+    ax2_2.set_ylabel(r'$T$ [degC]')
     ax2.plot(hours, S_w, 'b-', lw=0.8)
     ax2_2.plot(hours, Theta_inf, 'k-', lw=1.2)
     ax2.legend(['Schneefallrate'],
                prop={'size': font['size'] - 5}, loc='upper left')
-    ax2_2.legend(['Umgebungstemperatur'],
+    ax2_2.legend(['Umgebungstemperatur [degC]'],
                  prop={'size': font['size'] - 5}, loc='upper right')
     ax2.grid('major')
 
@@ -349,7 +355,7 @@ def main():
     plt.rc('figure')
     fig2 = plt.figure()
 
-    font = {'weight': 'bold', 'size': 22}
+    font = {'weight': 'bold', 'size': 14}
     plt.rc('font', **font)
 
     # Darstellungen Simulationsmodus
