@@ -31,7 +31,7 @@ def main():
     # -------------------------------------------------------------------------
 
     # 1.0) Standort
-    h_NHN = 780                                     # Höhe über Normal-Null des Standorts  [m]
+    h_NHN = 469                                     # Höhe über Normal-Null des Standorts  [m]
     path_wd = \
     './data/Wetterdaten_Hohenpeissenberg_h.xlsx'    # Dateipfad der Wetterdaten-Datei definieren
 
@@ -79,9 +79,9 @@ def main():
     r_iso_An = r_pa + D_iso_An                         # Außenradius der Isolationsschicht [m]
         
     # Länge der Anbindungen zwischen Bohrlöchern und Heizelement (ab Geländeoberkante) [m]
-    ''' l_R_An * N ergibt die Gesamtlänge an Heatpipe im Bereich der Anbindung
+    ''' l_An * N ergibt die Gesamtlänge an Heatpipe im Bereich der Anbindung
     '''
-    l_R_An = 5
+    l_An = 5
 
     # 1.5) Heizelement
 
@@ -118,7 +118,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 0.25 * 1 * (8760./12) * 3600.              # Gesamt-Simulationsdauer [s]
+    tmax = 0.25 * 1 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -221,14 +221,14 @@ def main():
             Q[i], Q_N[i], Q_V[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = \
                 load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], he, Theta_g,
                      R_th, R_th_ghp, Theta_g, B[i], Phi[i], RR[i], 0, 0, start_sb, 
-                     l_R_An * N, lambda_p, lambda_iso, r_iso_An, r_pa, r_pi)
+                     l_An * N, lambda_p, lambda_iso, r_iso_An, r_pa, r_pi)
 
         # Ermittlung der Entzugsleistung im Zeitschritt 2, 3, ..., Nt
         if i > 0:
             Q[i], Q_N[i], Q_V[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = \
                 load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], he, Theta_b[i-1], 
                      R_th, R_th_ghp, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1], m_Rs[i-1], start_sb, 
-                     l_R_An * N, lambda_p, lambda_iso, r_iso_An, r_pa, r_pi)
+                     l_An * N, lambda_p, lambda_iso, r_iso_An, r_pa, r_pi)
                 
         # Vergrößerung von Q um die thermischen Verluste (Anbindung (An) + Unterseite Heizelement (He))
         Q[i] += Q_V[i]
@@ -318,10 +318,10 @@ def main():
     ax1 = fig1.add_subplot(311)
     ax1.set_ylabel(r'$q$ [W/m2]')
     ax1.plot(hours, Q / A_he, 'k-', lw=1.2)
-    ax1.plot(hours, Q_V / A_he, 'g-', lw=1.2)
     ax1.plot(hours, Q_m / A_he, 'r--', lw=1.2)
-    ax1.legend(['Entzugsleistung', 'Verluste (Anbindung + Unterseite Heizelement)',
-                'Entzugsleistung-24h-gemittelt'],
+    ax1.plot(hours, Q_V / A_he, 'g-', lw=1.2)
+    ax1.legend(['Entzugsleistung', 'Entzugsleistung-24h-gemittelt',
+                'Verluste (Anbindung + Unterseite Heizelement)'],
                prop={'size': font['size'] - 5}, loc='upper left')
     ax1.grid('major')
 
@@ -360,8 +360,7 @@ def main():
 
     # Darstellungen Simulationsmodus
     ax4 = fig2.add_subplot(311)
-    ax4.set_xlabel(r'$t$ [h]')
-    # ax4.plot(hours, start_sb_counter, 'k--', lw=1.5)
+    ax4.plot(hours, start_sb_counter, 'k--', lw=1.5)
     ax4.plot(hours, sb_active, 'g-', lw=1.3)
     ax4.plot(hours, sim_mod, 'y-', lw=1.3)
     ax4.legend(['sb_active', 'sim_mod'],
@@ -379,6 +378,7 @@ def main():
 
     # Temperaturverläufe Bohrlochrand und Oberfläche Heizelement
     ax6 = fig2.add_subplot(313)
+    ax6.set_xlabel(r'$t$ [h]')
     ax6.set_ylabel(r'$T$ [degC]')
     ax6.plot(hours, Theta_b, 'r-', lw=1.2)
     ax6.plot(hours, Theta_surf, 'c-', lw=0.6)
