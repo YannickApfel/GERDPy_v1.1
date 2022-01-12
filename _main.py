@@ -118,7 +118,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 0.25 * 1 * (8760./12) * 3600.               # Gesamt-Simulationsdauer [s]
+    tmax = 0.25 * 1 * (8760./12) * 3600.              # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -200,12 +200,12 @@ def main():
     Q_N = np.zeros(Nt)
     Q_V = np.zeros(Nt)
 
-    print('Simulating...')
-
     # Hilfsgrößen
     start_sb_counter = np.zeros(Nt)
     sb_active = np.zeros(Nt)
     sim_mod = np.zeros(Nt)
+    
+    print('-----------------Simulationsstart-----------------')
 
     while time < tmax:                              # Iterationsschleife (ein Durchlauf pro Zeitschritt)
         
@@ -317,7 +317,7 @@ def main():
     # Lastprofil (thermische Leistung Q. über die Simulationsdauer)
     ax1 = fig1.add_subplot(311)
     ax1.set_ylabel(r'$q$ [W/m2]')
-    ax1.plot(hours, Q / A_he, 'k-', lw=2)
+    ax1.plot(hours, Q / A_he, 'k-', lw=1.2)
     ax1.plot(hours, Q_V / A_he, 'g-', lw=1.2)
     ax1.plot(hours, Q_m / A_he, 'r--', lw=1.2)
     ax1.legend(['Entzugsleistung', 'Verluste (Anbindung + Unterseite Heizelement)',
