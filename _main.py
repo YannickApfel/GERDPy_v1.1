@@ -104,7 +104,7 @@ def main():
     D_he = 0.25
     
     # Dicke der Isolationsschicht an der Unterseite [m]
-    D_iso_he = 0.01
+    D_iso_he = 0.03
 
     # Geometrie-Erstellung
     he = heating_element.HeatingElement(A_he, x_min, lambda_Bet, lambda_p, 
@@ -230,7 +230,7 @@ def main():
                      R_th, R_th_ghp, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1], m_Rs[i-1], start_sb, 
                      l_An * N, lambda_p, lambda_iso, r_iso_An, r_pa, r_pi)
                 
-        # Vergrößerung von Q um die thermischen Verluste (Anbindung (An) + Unterseite Heizelement (He))
+        # Erhöhung der ermittelten Entzugsleistung um die Verluste an Anbindung (An) und Unterseite des Heizelements (He)
         Q[i] += Q_V[i]
 
         start_sb = False  # Variable Start-Schneebilanzierung zurücksetzen
@@ -363,6 +363,7 @@ def main():
     ax4.plot(hours, start_sb_counter, 'k--', lw=1.5)
     ax4.plot(hours, sb_active, 'g-', lw=1.3)
     ax4.plot(hours, sim_mod, 'y-', lw=1.3)
+    ax4.plot(hours, sim_mod, 'y-', lw=1.3)    
     ax4.legend(['sb_active', 'sim_mod'],
                prop={'size': font['size'] - 5}, loc='upper right')
     ax4.grid('major')
