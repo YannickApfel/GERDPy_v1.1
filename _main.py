@@ -75,7 +75,7 @@ def main():
     # 1.4) Anbindung zum Heizelement (zusätzliche Größen)
     
     # Geometrie
-    D_iso_An = 0.01                                    # Dicke der Isolationsschicht [m]
+    D_iso_An = 0.005                                    # Dicke der Isolationsschicht [m]
     r_iso_An = r_pa + D_iso_An                         # Außenradius der Isolationsschicht [m]
         
     # Länge der Anbindungen zwischen Bohrlöchern und Heizelement (ab Geländeoberkante) [m]
@@ -118,7 +118,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 0.25 * 1 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
+    tmax = 1 * 12 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -294,7 +294,7 @@ def main():
 
     # Nutzenergiefaktor [%]
     f_N = (np.sum(Q_N) / len(Q_N)) / (np.sum(Q) / len(Q)) * 100
-    print(f'Davon wurden {round(f_N, 2)} % als Nutzenergie zur Schneeschmelze aufgewendet, der Rest sind Verluste an die Umgebung.')
+    print(f'Davon wurden {round(f_N, 2)} % als Nutzenergie zur Schneeschmelze aufgewendet. Der Rest sind Verluste an der Ober- und Unterseite des Heizelements sowie dessen Anbindungsleitungen.')
     print(50*'-')
     
     # -------------------------------------------------------------------------
