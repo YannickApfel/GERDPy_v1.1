@@ -26,7 +26,7 @@ c_p_s = 2.04e3  # spez. Wärmekapazität Eis / Schnee (bei 0 °C) [J/kgK]
 c_p_w = 4212  # spez. Wärmekapazität Wasser (bei 0 °C) [J/kgK]
 c_p_l = 1005  # spez. Wärmekapazität Luft (bei 0 °C, 1 bar) [J/kgK]
 Theta_Schm = 0  # Schmelztemperatur von Eis / Schnee [°C]
-H_max = 1  # maximal erlaubte Wasserhöhe auf dem Heizelement [mm]
+H_max = 2  # maximal erlaubte Wasserhöhe auf dem Heizelement [mm]
 
 
 # korrigierte Windgeschwindigkeit (Wind-Shear) [m/s]

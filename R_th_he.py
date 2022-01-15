@@ -55,7 +55,7 @@ def R_th_he_an(he):  # thermischer Widerstand [K/W]
     Theta_inf_o = 0
 
     # 3.) thermischer Widerstand des Heizelements in [K/W] --> R_th = 1 K / (q_l * l_R)
-    ''' Unterseite wird als thermisch isoliert betrachtet: state_u_insul=True
+    ''' andere Seite wird als thermisch isoliert betrachtet: state_u_insul=True
     '''
     R_th_he = (he.l_R * q_l(x_o, x_u, he.d_R_a, he.d_R_i, he.lambda_B, he.lambda_R, he.s_R, Theta_R, Theta_inf_o, state_u_insul=True)) ** -1
 

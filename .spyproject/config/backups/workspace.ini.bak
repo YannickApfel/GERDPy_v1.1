@@ -6,5 +6,5 @@ save_non_project_files = False
 
 [main]
 version = 0.2.0
-recent_files = ['_main.py', 'load_generator.py', 'heating_element.py', 'heating_element_utils.py', 'R_th_he.py', 'load_generator_utils.py']
+recent_files = ['..\\..\\..\\OneDrive\\#ZAE-Bayern\\1_GERDI_AP3\\pygfunction-1.1.2\\pygfunction\\examples\\load_aggregation.py']
 
