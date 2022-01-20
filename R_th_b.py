@@ -24,8 +24,8 @@ def R_th_b(lambda_g, borefield, hp):
 
     # Geometrie Heatpipes
     N = hp.N                            # Anzahl Heatpipes im Bohrloch [-]
-    r_pa = hp.r_pa                      # Außenradius Wärmerohr (mit Iso) [m]
-    r_iso = hp.r_iso_a                    # Innenradius Ummantelung [m]
+    r_iso_a = hp.r_iso_a                # Außenradius Ummantelung [m]
+    r_pa = hp.r_pa                      # Außenradius Wärmerohr [m]
     r_pi = hp.r_pi                      # Innenradius Wärmerohr [m]
 
     # Wärmeleitfähigkeiten [W/mK]:
@@ -44,8 +44,8 @@ def R_th_b(lambda_g, borefield, hp):
     sigma = (lambda_b - lambda_g) / (lambda_b + lambda_g)
 
     # Übergangswiderstand Wärmerohr + Isolationsschicht
-    r_pm = math.log(r_pa / r_iso) / (2 * pi * lambda_iso) + \
-        math.log(r_iso / r_pi) / (2 * pi * lambda_p)
+    r_pm = math.log(r_iso_a / r_pa) / (2 * pi * lambda_iso) + \
+        math.log(r_pa / r_pi) / (2 * pi * lambda_p)
     # r_pm = 0 (falls der thermische Widerstand von Iso und Rohr ignoriert werden soll)
 
     # koordinatenabhängige Hilfskoeffizienten

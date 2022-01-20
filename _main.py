@@ -69,13 +69,13 @@ def main():
     # Geometrie-Erstellung
     hp = heatpipes.Heatpipes(N, r_b, r_w, r_iso_b, r_pa, r_pi, lambda_b,
                              lambda_iso, lambda_p)
-    # Layout-Plot der Wärmerohrkonfiguration
+    # Layout-Plot der Wärmerohrkonfiguration183
     hp.visualize_hp_config()
     
     # 1.4) Anbindung zum Heizelement (zusätzliche Größen)
     
     # Geometrie
-    D_iso_An = 0.005                                    # Dicke der Isolationsschicht [m]
+    D_iso_An = 0.005                                   # Dicke der Isolationsschicht [m]
     r_iso_An = r_pa + D_iso_An                         # Außenradius der Isolationsschicht [m]
         
     # Länge der Anbindungen zwischen Bohrlöchern und Heizelement (ab Geländeoberkante) [m]
