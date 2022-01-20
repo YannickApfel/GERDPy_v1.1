@@ -282,7 +282,7 @@ def solve_F_T(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, u_inf, Theta_surf_0,
     Q_eva_sol = Q_eva_T(Theta_surf, eva, Theta_surf_0, m_Rw_0, Theta_inf, u_inf, h_NHN, Phi, A_he)
     Theta_surf_sol = Theta_surf
 
-    return Theta_surf, Q_lat_sol, Q_sen_sol, Q_eva_sol
+    return Theta_surf_sol, Q_lat_sol, Q_sen_sol, Q_eva_sol
 
 
 def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, B, Phi, RR, m_Rw_0, m_Rs_0, start_sb, 

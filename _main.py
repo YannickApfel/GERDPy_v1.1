@@ -402,6 +402,7 @@ def main():
     ax6.yaxis.set_minor_locator(AutoMinorLocator())
 
     # plt.tight_layout()
+    plt.show()
     
     return
 
