@@ -293,9 +293,9 @@ def main():
     print(f'Dem Boden wurden {round(E, 4)} MWh entnommen')
 
     # Nutzenergiefaktor [%]
-    f_N = (np.sum(Q_N) / len(Q_N)) / (np.sum(Q) / len(Q)) * 100
-    print(f'Davon wurden {round(f_N, 2)} % als Nutzenergie zur Schneeschmelze aufgewendet. Der Rest sind Verluste an der Ober- und Unterseite des Heizelements sowie dessen Anbindungsleitungen.')
-    print(50*'-')
+    # f_N = (np.sum(Q_N) / len(Q_N)) / (np.sum(Q) / len(Q)) * 100
+    # print(f'Davon wurden {round(f_N, 2)} % als Nutzenergie zur Schneeschmelze aufgewendet. Der Rest sind Verluste an der Ober- und Unterseite des Heizelements sowie dessen Anbindungsleitungen.')
+    # print(50*'-')
     
     # -------------------------------------------------------------------------
     # 8.) Plot
@@ -314,7 +314,7 @@ def main():
     font = {'weight': 'bold', 'size': 14}
     plt.rc('font', **font)
 
-    # Lastprofil (thermische Leistung Q. über die Simulationsdauer)
+    # Lastprofil {Entzugsleistung - Entzugsleistung (24h-gemittelt) - Verluste (Anbindung + Unterseite Heizelement)}
     ax1 = fig1.add_subplot(311)
     ax1.set_ylabel(r'$q$ [W/m2]')
     ax1.plot(hours, Q / A_he, 'k-', lw=1.2)
@@ -325,16 +325,18 @@ def main():
                prop={'size': font['size'] - 5}, loc='upper left')
     ax1.grid('major')
 
-    # Schneefallrate
+    # Schneefallrate - Schneehöhe - Umgebungstemperatur - Windgeschwindigkeit
     ax2 = fig1.add_subplot(312)
     ax2_2 = ax2.twinx()
-    ax2.set_ylabel('Schneefallrate [mm/h]')
-    ax2_2.set_ylabel(r'$T$ [degC]')
+    ax2.set_ylabel('Schneefallrate [mm/h] \n Schneehöhe [mm]')
+    ax2_2.set_ylabel('$T$ [degC] \n Windgeschwindigkeit [m/s]')
     ax2.plot(hours, S_w, 'b-', lw=0.8)
-    ax2_2.plot(hours, Theta_inf, 'k-', lw=1.2)
-    ax2.legend(['Schneefallrate'],
+    ax2.plot(hours, m_Rs / A_he, 'g-', lw=0.8)
+    ax2_2.plot(hours, Theta_inf, 'k-', lw=0.8)
+    ax2_2.plot(hours, u_inf, 'm--', lw=0.8)
+    ax2.legend(['Schneefallrate', 'Schneehöhe'],
                prop={'size': font['size'] - 5}, loc='upper left')
-    ax2_2.legend(['Umgebungstemperatur [degC]'],
+    ax2_2.legend(['Umgebungstemperatur', 'Windgeschwindigkeit'],
                  prop={'size': font['size'] - 5}, loc='upper right')
     ax2.grid('major')
 
