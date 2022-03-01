@@ -10,13 +10,13 @@
 from R_th_c import R_th_c
 from R_th_b import R_th_b
 from R_th_hp import R_th_hp
-from R_th_he import *
+from R_th_he import R_th_he
 
 
 def R_th_tot(lambda_g, borefield, hp, he):  # [K/W]
 
     R_th_tot = R_th_c(borefield) + R_th_b(lambda_g, borefield, hp) + \
-        R_th_hp(borefield, hp) + R_th_he_an(he)
+        R_th_hp(borefield, hp) + R_th_he(he)
     # + weitere thermische Widerstände
 
     return R_th_tot

@@ -1,22 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Thermischer Widerstand des Heizelements
 
-    1.) R_th_he_PS: (PS - Prüfstand)
-
-        - thermischer Widerstand des Heizelements des ZAE Klimaprüfstands
-
-        - parametrierte Geradengleichung aus numerischen Simulationen (FEM) des
-        Oberflächenheizelements für die Klimakammer des ZAE, basierend auf der
-        Masterarbeit [Apfel2020]; Heizleistung: 250 W, delta-T: 5 K
-
-        - Geometrie: Rohrschlaufen mit ca. 55 mm Abstand der Kondensatorrohre
-
-        - variable Größen:
-            - Fläche des Heizelements [m²]
-            - minimaler Oberflächenabstand x_min [m]
-            - Wärmeleitfähigkeit des Betons des Heizelements [W/mK]
-
-    2.) R_th_he_an: (an - analytisch))
+    R_th_he:
 
         - analytisch ermittelter therm. Widerstand basierend auf der Norm
         VDI 2055-1 [2019] für die thermischen Verluste gedämmter Rohrleitungen
@@ -34,17 +19,7 @@
 from heating_element_utils import *
 
 
-def R_th_he_PS(he):  # thermischer Widerstand [K/W]
-
-    r_th_he = (5 - (- (0.55 / 5) * he.x_min * 1000 + 2 * (he.lambda_B - 2.3) +
-                    3.4)) / 250  # [Km²/W]
-
-    R_th_he = r_th_he / he.A_he  # [K/W]
-
-    return R_th_he
-
-
-def R_th_he_an(he):  # thermischer Widerstand [K/W]
+def R_th_he(he):  # thermischer Widerstand [K/W]
 
     # 1.) zusätzliche Parameter des Heizelements
     x_o = he.x_min + 0.5 * he.d_R_a  # Achsabstand Kondensatrohr nach oben [m]

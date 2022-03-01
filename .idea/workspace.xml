@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="be3d3d73-f31a-429a-8f35-3c7ebfc56bca" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/R_th_b.py" beforeDir="false" afterPath="$PROJECT_DIR$/R_th_b.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/R_th_he.py" beforeDir="false" afterPath="$PROJECT_DIR$/R_th_he.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/R_th_tot.py" beforeDir="false" afterPath="$PROJECT_DIR$/R_th_tot.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/_main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -22,7 +22,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Modern_GUI_GerdPy/GERDPy/load_generator_utils.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Modern_GUI_GerdPy" />
     <property name="settings.editor.selected.configurable" value="preferences.pathVariables" />
   </component>
   <component name="RunManager" selected="Python.guimain">
