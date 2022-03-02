@@ -224,23 +224,23 @@ def F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_s
 # Solver für die Lösung der Leistungsbilanz F_Q := 0 nach Q
 def solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he):
     step_refine = 0  # Hilfsvariable zur Verfeinerung der Schrittweite
-    step = 30  # doppelter Startwert als Iterationsschrittweite für Q
+    step = 100  # doppelter Startwert als Iterationsschrittweite für Q
     res = 0.001  # zulässiges Residuum für F_Q (Restfehler)
 
     Q = 0  # Startwert für Q
 
     error = abs(F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he))
 
-    # Ermittlung von Q für F_Q = 0 (stationäres System)
+    # Ermittlung von Q für F_Q := 0 (stationäres System)
     while error > res:
+        step_refine += 1
+        step = step / (2 * step_refine)  # Halbierung der Schrittweite für eine weitere Überschreitung/Unter- des Zielwerts
         if F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) > 0:
-            step_refine += 1
             while F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) > 0:
-                Q += (step / (2 * step_refine))  # Halbierung der Schrittweite für eine weitere Überschreitung/Unter- des Zielwerts
+                Q += step
         elif F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) < 0:
-            step_refine += 1
             while F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) < 0:
-                Q -= (step / (2 * step_refine))  # Halbierung der Schrittweite für eine weitere Überschreitung/Unter- des Zielwerts
+                Q -= step
 
         error = abs(F_Q(R_f, lat, S_w, Q, sen, Theta_inf, Theta_b_0, R_th, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he))
 
@@ -256,23 +256,23 @@ def solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, Theta_b_0, R_th, u_i
 # Solver für die Lösung der Leistungsbilanz F_T := 0 nach Theta_surf
 def solve_F_T(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he):
     step_refine = 0  # Hilfsvariable zur Verfeinerung der Schrittweite
-    step = 10  # doppelter Startwert als Iterationsschrittweite für T
-    res = 0.01  # zulässiges Residuum für F_T (Restfehler)
+    step = 100  # doppelter Startwert als Iterationsschrittweite für T
+    res = 0.001  # zulässiges Residuum für F_T (Restfehler)
 
     Theta_surf = 0  # Startwert für Q
 
     error = abs(F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he))
 
-    # Ermittlung von Theta_surf für F_T = 0 (stationäres System)
+    # Ermittlung von Theta_surf für F_T := 0 (stationäres System)
     while error > res:
+        step_refine += 1
+        step = step / (2 * step_refine)  # Halbierung der Schrittweite für eine weitere Überschreitung/Unter- des Zielwerts
         if F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) > 0:
-            step_refine += 1
-            while F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) > 0:
-                Theta_surf -= (step / (2 * step_refine))  # Halbierung der Schrittweite für eine weitere Überschreitung/Unter- des Zielwerts
+            while F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) > 0: 
+                Theta_surf -= step
         elif F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) < 0:
-            step_refine += 1
             while F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he) < 0:
-                Theta_surf += (step / (2 * step_refine))  # Halbierung der Schrittweite für eine weitere Überschreitung/Unter- des Zielwerts
+                Theta_surf += step
 
         error = abs(F_T(R_f, lat, S_w, Theta_surf, sen, Theta_inf, con, u_inf, rad, eva, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, A_he))
 
