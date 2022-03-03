@@ -58,3 +58,18 @@ def time_ClaessonJaved(dt, tmax, cells_per_level=5):
     time = np.array(time)
 
     return time
+
+
+def Q_moving_average(Q):
+    h_interv = 25
+    Q_ma = np.zeros(len(Q))
+    for i in range(0, len(Q)):
+        if i < (h_interv / 2):
+            Q_ma[i] = np.mean(Q[0 : (2 * i + 1)])
+        elif (i >= (h_interv / 2)) and (i <= ((len(Q) - 1) - (h_interv / 2))):
+            Q_ma[i] = np.mean(Q[(i - int(np.floor(h_interv / 2))) : (i + int(np.ceil(h_interv / 2)))])
+        elif i > ((len(Q) - 1) - (h_interv / 2)):
+            Q_ma[i] = np.mean(Q[(i - (len(Q) - 1 - i)) : len(Q)])
+        Q_ma[-1] = Q[-1]
+        
+    return Q_ma

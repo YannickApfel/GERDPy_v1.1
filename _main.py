@@ -23,6 +23,7 @@ from load_generator import *
 from R_th_tot import *
 from weather_data import get_weather_data
 from geometrycheck import check_geometry
+from utilities import Q_moving_average
 
 
 def main():
@@ -119,7 +120,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 1 * 1 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
+    tmax = 1 * 3 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -280,15 +281,8 @@ def main():
             E - E_N         - Summe der Verluste durch Konvektion, Strahlung und Verdunstung
     '''
 
-    # gemittelte Entzugsleistung [W]
-    h_interv = 24                                   # Zeitintervall der gemittelten Entzugsleistung [h]
-    
-    
-
-    Q_m = np.zeros(Nt)
-    for i in range(0, Nt, h_interv):
-        Q_interv = [x for x in Q[i:(i+h_interv)]]
-        Q_m[i:(i+h_interv)] = np.mean(Q_interv)
+    # 24h-gemittelte Entzugsleistung (gleitender Mittelwert)
+    Q_ma = Q_moving_average(Q)
 
     # Gesamtenergiemenge [MWh]
     E = (np.sum(Q) / len(Q)) * Nt * 1e-6
@@ -317,11 +311,11 @@ def main():
     font = {'weight': 'bold', 'size': 10}
     plt.rc('font', **font)
 
-    # Lastprofil {Entzugsleistung - Entzugsleistung (24h-gemittelt) - Verluste (Anbindung + Unterseite Heizelement)}
+    # Lastprofil {Entzugsleistung - Entzugsleistung (gleitender Mittelwert 24h) - Verluste (Anbindung + Unterseite Heizelement)}
     ax1 = fig1.add_subplot(411)
     ax1.set_ylabel(r'$q$ [W/m2]')
     ax1.plot(hours, Q / A_he, 'k-', lw=1.2)
-    ax1.plot(hours, Q_m / A_he, 'r--', lw=1.2)
+    ax1.plot(hours, Q_ma / A_he, 'r--', lw=1.2)
     ax1.plot(hours, Q_V / A_he, 'g-', lw=1.2)
     ax1.legend(['Entzugsleistung', 'Entzugsleistung-24h-gemittelt',
                 'Verluste (Anbindung + Unterseite Heizelement)'],
