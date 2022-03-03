@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+""" GERDPy - 'boreholes.py'
+    
+    Klasse für Bohrlöcher und zugehörige Methoden
+    
+    basiert auf: Pygfunction von Massimo Cimmino
+
+    Autor(en): Massimo Cimmino, Yannick Apfel
+"""
 import numpy as np
 
 

@@ -1,5 +1,10 @@
-# from __future__ import absolute_import, division, print_function
+# -*- coding: utf-8 -*-
+""" GERDPy - 'utilities.py'
+    
+    diverse Hilfsfunktionen 
 
+    Autor(en): Massimo Cimmino, Yannick Apfel
+"""
 import numpy as np
 
 

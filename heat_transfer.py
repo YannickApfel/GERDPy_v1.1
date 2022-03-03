@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+""" GERDPy - 'heat_transfer.py'
+    
+    Funktionen zur Auswertung des Finite-Line-Source-Ansatzes nach
+    [ClaessonJaved2011] und [CimminoBernier2014]
+    
+    basiert auf: Pygfunction von Massimo Cimmino
+
+    Autor(en): Massimo Cimmino
+"""
 import time as tim
 from functools import partial
 from multiprocessing import Pool

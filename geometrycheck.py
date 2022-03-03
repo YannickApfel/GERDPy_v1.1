@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-""" Autor: Yannick Apfel
-
+""" GERDPy - 'geometrycheck.py'
+    
     Modul zur Prüfung geometrischer Verträglichkeit:
         - Abstand der Erwärmesondenbohrungen zueinander muss > 2 * r_b
         - identische Außenradien der Erdwärmesondenbohrungen
         - Abstände der Heatpipes in der Bohrung
+
+    Autor(en): Yannick Apfel
 """
 import numpy as np
 

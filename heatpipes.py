@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-""" Autor: Yannick Apfel
+""" GERDPy - 'heatpipes.py'
+    
+    Klasse für die Wärmerohrkonfiguration im Bohrloch (identisch für jedes 
+                                                       Bohrloch)
+
+    Autor(en): Yannick Apfel
 """
 import numpy as np
 from scipy.constants import pi

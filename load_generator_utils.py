@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-""" Stoffwerte und Unterfunktionen für 'load_generator.py'
+""" GERDPy - 'load_generator_utils.py'
+    
+    Zusatzmodul für 'load_generator.py':
+    physikalische Gleichungen, Korrelationen und Unterfunktionen für das
+    Lastmodell
 
     Legende:
         - Temperaturen:
@@ -8,7 +12,7 @@
 
     Quellen: [Konrad2009], [Fuchs2021], [ASHRAE2015]
 
-    Autor: Yannick Apfel
+    Autor(en): Yannick Apfel
 """
 import math, sys
 import CoolProp.CoolProp as CP

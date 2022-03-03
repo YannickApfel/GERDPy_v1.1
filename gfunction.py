@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+""" GERDPy - 'gfunction.py'
+    
+    Funktionen zur Ermittlung der G-Function mittels Dirichlet-Randbedingung
+    für die Temperatur
+
+    basiert auf: Pygfunction von Massimo Cimmino
+
+    Autor(en): Massimo Cimmino
+"""
 import time as tim
 
 import numpy as np

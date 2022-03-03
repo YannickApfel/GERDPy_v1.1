@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-""" GERDPy - Main-File
+""" GERDPy - '_main.py'
+
     Steuerungsfile des Auslegungstools für das Projekt GERDI
 
     Legende:
@@ -7,7 +8,7 @@
             - T in Kelvin [K] - für (kalorische) Gleichungen
             - Theta in Grad Celsius [°C] - Input aus dem Wetterdatenfile
 
-    Autor: Yannick Apfel
+    Autor(en): Yannick Apfel
 """
 import sys
 import matplotlib.pyplot as plt
@@ -118,7 +119,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 1 * 12 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
+    tmax = 1 * 1 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -281,6 +282,8 @@ def main():
 
     # gemittelte Entzugsleistung [W]
     h_interv = 24                                   # Zeitintervall der gemittelten Entzugsleistung [h]
+    
+    
 
     Q_m = np.zeros(Nt)
     for i in range(0, Nt, h_interv):

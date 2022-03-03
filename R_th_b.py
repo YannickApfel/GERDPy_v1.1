@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-""" Bohrlochwiderstand
+""" GERDPy - 'R_th_b.py'
+    
+    Modul für den Bohrlochwiderstand
+    
     [Hellström 1991 - Line source approximation]
 
     N Heatpipes gleichmäßig kreisförmig im Bohrloch angeordnet
 
-    Autor: Yannick Apfel
+    Autor(en): Yannick Apfel
 """
-
-
 def R_th_b(lambda_g, borefield, hp):
 
     import math

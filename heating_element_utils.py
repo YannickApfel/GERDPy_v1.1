@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-""" Analytische Reihenlösung für den Wärmestrom in einem Rohrregister mit
-    äquidistanten Rohren nach VDI 2055-1 (T-Randbedingung)
+""" GERDPy - 'heating_element_utils.py'
+    
+    Zusatzmodul für 'heating_element.py':
+    analytische Reihenlösung für den Wärmestrom in einem Rohrregister mit
+    äquidistanten Rohren nach VDI 2055-1 (T-Randbedingung), verwendet zur 
+    Ermittlung des thermischen Widerstands des Heizelements
 
     q_l - Wärmeleistung pro Meter verbautem Rohr [W/m]
 
-    - verwendet zur Ermittlung des thermischen Widerstands des Heizelements
-
-    Autor: Yannick Apfel
+    Autor(en): Yannick Apfel
 """
 import math
 

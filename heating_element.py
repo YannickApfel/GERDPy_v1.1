@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-""" Autor: Yannick Apfel
+""" GERDPy - 'heating_element.py'
+    
+    Klasse für das Heizelement
+
+    Autor(en): Yannick Apfel
 """
-
-
 class HeatingElement(object):
     """
     Enthält die Klasse für das Heizelement.

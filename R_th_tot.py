@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
-""" Reihenschaltung thermischer Widerstände im System
+""" GERDPy - 'R_th_tot.py'
     
-    R_th_tot: Gesamtwiderstand Boden-Umgebung
+    Modul für den thermischen Gesamtwiderstand des Systems
     
-    R_th_g_hp: Teil-Widerstand Boden-Heatpipe
+    Reihenschaltung aus Teilwiderständen:
+        - R_th_tot: Gesamtwiderstand Boden-Umgebung: 
+            = R_th_c + R_th_b + R_th_hp + R_th_he
+        - R_th_g_hp: Teil-Widerstand Boden-Heatpipe:
+            = R_th_c + R_th_b + R_th_hp = R_th_tot - R_th_he
 
-    Autor: Yannick Apfel
+    Autor(en): Yannick Apfel
 """
 from R_th_c import R_th_c
 from R_th_b import R_th_b

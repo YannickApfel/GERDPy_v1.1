@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+""" GERDPy - 'load_aggregation.py'
+
+    Modul zur Generierung eines zeitlichen Lastprofils
+
+    basiert auf: Pygfunction von Massimo Cimmino
+
+    Autor(en): Massimo Cimmino
+"""
 import numpy as np
 
 import utilities

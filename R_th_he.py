@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-""" Thermischer Widerstand des Heizelements
-
+""" GERDPy - 'R_th_he.py'
+    
+    Modul für den thermischen Widerstand des Heizelements
+    
     R_th_he:
 
     - analytisch ermittelter therm. Widerstand basierend auf der Norm
@@ -14,7 +16,7 @@
         - Rohrgeometrie des Kondensator (Durchmesser, Rohrabstand,
                                          Rohrlänge) [m]
 
-    Autor: Yannick Apfel
+    Autor(en): Yannick Apfel
 """
 from heating_element_utils import *
 

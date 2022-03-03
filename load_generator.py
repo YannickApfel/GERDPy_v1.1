@@ -1,54 +1,59 @@
 # -*- coding: utf-8 -*-
-""" Ermittlung der Systemleistung anhand einer stationären Leistungsbilanz an der Oberfläche
-    des Heizelements für jeden Zeitschritt
+""" GERDPy - 'load_generator.py'
 
-    Q. = (Theta_b - Theta_surf) / R_th_tot 
-       = Q._lat + Q._sen + R_f * (Q._con + Q._rad + Q._eva)
-    
-    Leistungsbilanzen: (ohne Betrachtung der Verluste)
-        - F_Q = Q._lat + Q._sen + R_f * (Q._con + Q._rad + Q._eva) - Q.
-        - F_T = Q._lat + Q._sen + R_f * (Q._con + Q._rad + Q._eva)
+    Modul zur Ermittlung der Oberflächenlast (Lastmodell) am Heizelement durch
+    stationäre Kopplung von Boden, Erdwärmesonden und Heizelementoberfläche
 
-    Fallunterscheidung:
-        - Theta_b >= Theta_surf: Lösung der vollen Leistungsbilanz 
-            F_Q = 0, Q. >= 0 (positiver Wärmeentzug aus dem Boden)
+    Ermittlung der Systemleistung anhand einer stationären Leistungsbilanz an der Oberfläche
+        des Heizelements für jeden Zeitschritt
 
-            {Erdboden + Oberfläche + Umgebung} -> Auflösung nach Q.
+        Q. = (Theta_b - Theta_surf) / R_th_tot 
+           = Q._lat + Q._sen + R_f * (Q._con + Q._rad + Q._eva)
+        
+        Leistungsbilanzen: (ohne Betrachtung der Verluste)
+            - F_Q = Q._lat + Q._sen + R_f * (Q._con + Q._rad + Q._eva) - Q.
+            - F_T = Q._lat + Q._sen + R_f * (Q._con + Q._rad + Q._eva)
 
-        - Theta_b < Theta_surf: Lösung der reduzierten Leistungsbilanz 
-            F_T = 0, Q. := 0 (kein Wärmeentzug aus dem Boden)
+        Fallunterscheidung:
+            - Theta_b >= Theta_surf: Lösung der vollen Leistungsbilanz 
+                F_Q = 0, Q. >= 0 (positiver Wärmeentzug aus dem Boden)
 
-            {Oberfläche + Umgebung} -> Auflösung nach Theta_surf (Oberflächentemperatur)
+                {Erdboden + Oberfläche + Umgebung} -> Auflösung nach Q.
 
-    Definition der Einzellasten:
+            - Theta_b < Theta_surf: Lösung der reduzierten Leistungsbilanz 
+                F_T = 0, Q. := 0 (kein Wärmeentzug aus dem Boden)
 
-        lat - latent
-        sen - sensibel
-        con - konvektiv
-        rad - Strahlung
-        eva - Verdunstung
+                {Oberfläche + Umgebung} -> Auflösung nach Theta_surf (Oberflächentemperatur)
 
-    &
+        Definition der Einzellasten:
 
-    Lösung der Leistungsbilanz - Verfahren: iterative Nullstellensuche
+            lat - latent
+            sen - sensibel
+            con - konvektiv
+            rad - Strahlung
+            eva - Verdunstung
 
-    Legende:
-        - Temperaturen:
-            - T in Kelvin [K] - für (kalorische) Gleichungen
-            - Theta in Grad Celsius [°C] - Input aus dem Wetterdatenfile
+        &
 
-    Algorithmus basierend in Teilen auf [Konrad2009]
-    
-    Anmerkungen zu Variablen:
-        - calc_T_surf:
-            - "False": Leistungsentzug aus dem Boden Q >= 0 (positiv), Oberflächentemp. Theta_surf wird in "main.py" ermittelt
-            (Simulationsmodi 2 und 4)
-            - "True": kein Leistungsentzug aus dem Boden, Oberflächentemp. Theta_surf wird in "load_generator.py" ermittelt
-        - sb_active:
-            - "True": Schneeschichtbilanzierung aktiv (es kann sich eine Schneeschicht bilden)
-            - "False": Schneeschichtbilanzierung inaktiv (die Schneelast wird in jedem Zeitschritt abgeschmolzen, keine Bildung einer Schneedecke)
+        Lösung der Leistungsbilanz - Verfahren: iterative Nullstellensuche
 
-    Autor: Yannick Apfel
+        Legende:
+            - Temperaturen:
+                - T in Kelvin [K] - für (kalorische) Gleichungen
+                - Theta in Grad Celsius [°C] - Input aus dem Wetterdatenfile
+
+        basiert auf: [Konrad 2009] und [Fuchs 2020]
+        
+        Anmerkungen zu Variablen:
+            - calc_T_surf:
+                - "False": Leistungsentzug aus dem Boden Q >= 0 (positiv), Oberflächentemp. Theta_surf wird in "main.py" ermittelt
+                (Simulationsmodi 2 und 4)
+                - "True": kein Leistungsentzug aus dem Boden, Oberflächentemp. Theta_surf wird in "load_generator.py" ermittelt
+            - sb_active:
+                - "True": Schneeschichtbilanzierung aktiv (es kann sich eine Schneeschicht bilden)
+                - "False": Schneeschichtbilanzierung inaktiv (die Schneelast wird in jedem Zeitschritt abgeschmolzen, keine Bildung einer Schneedecke)
+
+    Autor(en): Yannick Apfel
 """
 import math
 from scipy.constants import sigma

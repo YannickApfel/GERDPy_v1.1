@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
-""" Thermischer Widerstand im Thermosiphon (verdampferseitig) mit
+""" GERDPy - 'R_th_hp.py'
+    
+    Modul für den thermischen Widerstand im Thermosiphon (Heatpipe)
+    
+    Thermischer Widerstand im Thermosiphon (verdampferseitig) mit
     simpler Charakteristik im Q.-deltaT - Diagramm (linearer Anstieg)
+    
+    Vernachlässigung von Leistungsgrenzen (z. B: Entrainment-Limit)
 
-    Heatpipe-Charakteristik: Q. = (500W / 1K) * deltaT (ohne Entrainment)
+    Heatpipe-Charakteristik: Q. = (500 W * N_Anzahl_Heatpipes / 1 K) * deltaT
 
-    Autor: Yannick Apfel
+    Autor(en): Yannick Apfel
 """
-
-
 def R_th_hp(borefield, hp):
 
     # %% 1.) Parameter

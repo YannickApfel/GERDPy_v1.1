@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-""" Kontaktwiderstand Bohrloch-Hinterfüllung
+""" GERDPy - 'R_th_c.py'
+    
+    Modul für den Kontaktwiderstand Erdboden - Bohrlochrand (Hinterfüllung)
+    
     [VDI-Wärmeatlas 2013 - Wärmeübergangskoeffizient Wand-Schüttung]
 
-    Autor: Yannick Apfel
+    Autor(en): Yannick Apfel
 """
 def R_th_c(borefield):
 
