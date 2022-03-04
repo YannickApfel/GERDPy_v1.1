@@ -67,7 +67,7 @@ from heating_element_utils import *
 def Q_con_Q(Q, con, u_inf, Theta_b_0, R_th, Theta_inf, A_he):  # [W]
     Q_con = 0
     if con:
-        Q_con = alpha_kon_Bentz(u_inf) * (Theta_b_0 - Q * R_th - Theta_inf) * A_he
+        Q_con = alpha_kon_he_o(u_inf) * (Theta_b_0 - Q * R_th - Theta_inf) * A_he
 
     return Q_con
 
@@ -76,7 +76,7 @@ def Q_con_Q(Q, con, u_inf, Theta_b_0, R_th, Theta_inf, A_he):  # [W]
 def Q_con_T(Theta_surf, con, u_inf, Theta_inf, A_he):  # [W]
     Q_con = 0
     if con:
-        Q_con = alpha_kon_Bentz(u_inf) * (Theta_surf - Theta_inf) * A_he
+        Q_con = alpha_kon_he_o(u_inf) * (Theta_surf - Theta_inf) * A_he
 
     return Q_con
 
@@ -165,6 +165,7 @@ def Q_lat(lat, S_w, A_he):  # [W]
           im Bereich der Anbindung
         - Ermittlung der Rohrinnentemperatur über die Bohrlochtemperatur Theta_b und den therm. Widerstand R_th_g_hp
         - Annahme Theta_inf (Umgebungstemperatur) als Rohraußentemperatur
+        - 
 
     Q_V_He: thermische Verluste an der Unterseite des Heizelements
         - "R_th_he_u": Verrohrung (Heatpipe-Innenseite) bis Heizelement-Unterseite (ohne Isolierung)
@@ -175,10 +176,11 @@ def Q_V(Theta_R, Theta_inf, lambda_p, lambda_iso, l_R_An, r_iso, r_pa, r_pi, he)
     def Q_V_An(Theta_R, Theta_inf, lambda_p, lambda_iso, l_R_An, r_iso, r_pa, r_pi):  # [W]
 
         Q_V_an = (Theta_R - Theta_inf) * (2 * math.pi * l_R_An) \
-                * (math.log(r_pa / r_pi) / lambda_p + math.log(r_iso / r_pa) / lambda_iso) ** -1
+                * (math.log(r_pa / r_pi) / lambda_p + math.log(r_iso / r_pa) / lambda_iso
+                    + 1 / (alpha_kon_an(Theta_R - Theta_inf) * r_iso)) ** -1
         if Q_V_an < 0:  # Q. < 0 bei Gravitationswärmerohren nicht möglich
             Q_V_an = 0
-            
+
         return Q_V_an
     
     def Q_V_He(he, lambda_iso, Theta_R, Theta_inf):  # [W]
@@ -189,7 +191,10 @@ def Q_V(Theta_R, Theta_inf, lambda_p, lambda_iso, l_R_An, r_iso, r_pa, r_pi, he)
         # thermischer Widerstand der Isolierung
         R_th_he_iso = 1 / lambda_iso * he.D_iso / he.A_he
         
-        Q_V_he = (Theta_R - Theta_inf) * (R_th_he_u + R_th_he_iso) ** -1
+        # thermischer Übergangswiderstand an Unterseite
+        R_th_he_alpha = (alpha_kon_he_u() * he.A_he) ** -1
+        
+        Q_V_he = (Theta_R - Theta_inf) * (R_th_he_u + R_th_he_iso + R_th_he_alpha) ** -1
         if Q_V_he < 0:  # Q. < 0 bei Gravitationswärmerohren nicht möglich
             Q_V_he = 0
     

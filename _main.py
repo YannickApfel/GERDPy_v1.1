@@ -35,7 +35,7 @@ def main():
     # 1.0) Standort
     h_NHN = 469                                     # Höhe über Normal-Null des Standorts  [m]
     path_wd = \
-    './data/Wetterdaten_Hohenpeissenberg_h.xlsx'    # Dateipfad der Wetterdaten-Datei definieren
+    './data/Wetterdaten_Hamburg_h.xlsx'    # Dateipfad der Wetterdaten-Datei definieren
 
     # 1.1) Erdboden
     a = 1.0e-6                                      # Temperaturleitfähigkeit [m²/s]
@@ -73,13 +73,13 @@ def main():
                              lambda_iso, lambda_p)
     # Layout-Plot der Wärmerohrkonfiguration183
     hp.visualize_hp_config()
-    
+
     # 1.4) Anbindung zum Heizelement (zusätzliche Größen)
-    
+
     # Geometrie
     D_iso_An = 0.005                                   # Dicke der Isolationsschicht [m]
     r_iso_An = r_pa + D_iso_An                         # Außenradius der Isolationsschicht [m]
-        
+
     # Länge der Anbindungen zwischen Bohrlöchern und Heizelement (ab Geländeoberkante) [m]
     ''' l_An * N ergibt die Gesamtlänge an Heatpipe im Bereich der Anbindung
     '''
@@ -120,7 +120,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 1 * 3 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
+    tmax = 1 * 1 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
