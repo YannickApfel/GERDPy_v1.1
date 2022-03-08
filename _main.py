@@ -120,7 +120,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 1 * 1 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
+    tmax = 1 * 12 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -170,9 +170,10 @@ def main():
     u_inf, Theta_inf, S_w, B, Phi, RR = get_weather_data(Nt, path_wd)
     ''' u_inf - Windgeschwindigkeit [m/s]
         Theta_inf - Umgebungstemperatur [°C]
-        S_w - Schneefallrate (Wasserequivalent) [mm/s]
+        S_w - Schneefallrate (Wasserequivalent) [mm/h]
         B - Bewölkungsgrad [octal units / 8]
         Phi - rel. Luftfeuchte [-]
+        RR - Niederschlagsmenge (gesamt) [mm/h]
     '''
 
     # -------------------------------------------------------------------------
@@ -191,10 +192,10 @@ def main():
     Theta_b = np.zeros(Nt)                          # Bohrlochrand
     Theta_surf = np.zeros(Nt)                       # Oberfläche Heizelement
     
-    # Initialisierung Vektor für Restwassermenge [mm]
+    # Initialisierung Vektor für Restwassermenge [kg]
     m_Rw = np.zeros(Nt)
     
-    # Initialisierung Vektor für Restschneemenge [mm - Wasserequivalent]
+    # Initialisierung Vektor für Restschneemenge [kg]
     m_Rs = np.zeros(Nt)
 
     # Initialisierung Gesamt-Entzugsleistung, Nutzleistung und Verluste [W]
@@ -324,9 +325,9 @@ def main():
 
     # Schneefallrate - Schneehöhe - Umgebungstemperatur - Windgeschwindigkeit
     ax2 = fig1.add_subplot(412)
-    ax2.set_ylabel('Schneefallrate [mm/h] \n Schneehöhe [mm]')
+    ax2.set_ylabel('Schneefallrate [mm/h] \n Schneehöhe [H2O-mm]')
     ax2.plot(hours, S_w, 'b-', lw=0.8)
-    ax2.plot(hours, m_Rs / A_he, 'g-', lw=0.8)
+    ax2.plot(hours, m_Rs / (A_he * (997 / 1000)), 'g-', lw=0.8)
     ax2.legend(['Schneefallrate', 'Schneehöhe'],
                prop={'size': font['size'] - 4}, loc='upper left')
     ax2.grid('major')
@@ -373,8 +374,8 @@ def main():
     # Wasser- und Schneebilanzlinie (Wasserequivalent)
     ax6 = fig2.add_subplot(312)
     ax6.set_ylabel('[mm]')
-    ax6.plot(hours, m_Rw / A_he, 'b-', lw=0.8)
-    ax6.plot(hours, m_Rs / A_he, 'g-', lw=0.8)
+    ax6.plot(hours, m_Rw / (A_he * (997 / 1000)), 'b-', lw=0.8)
+    ax6.plot(hours, m_Rs / (A_he * (997 / 1000)), 'g-', lw=0.8)
     ax6.legend(['Wasserhoehe', 'Schneehoehe'],
                prop={'size': font['size'] - 4}, loc='upper left')
     ax6.grid('major')
