@@ -40,7 +40,7 @@ def main():
     # 1.1) Erdboden
     a = 1.0e-6                                      # Temperaturleitfähigkeit [m²/s]
     lambda_g = 2.0                                  # Wärmeleitfähigkeit [W/mK]
-    Theta_g = 2.0                                  # ungestörte Bodentemperatur [°C]
+    Theta_g = 10.0                                  # ungestörte Bodentemperatur [°C]
 
     # 1.2) Erdwärmesondenfeld
 
@@ -71,7 +71,7 @@ def main():
     # Geometrie-Erstellung
     hp = heatpipes.Heatpipes(N, r_b, r_w, r_iso_b, r_pa, r_pi, lambda_b,
                              lambda_iso, lambda_p)
-    # Layout-Plot der Wärmerohrkonfiguration183
+    # Layout-Plot der Wärmerohrkonfiguration
     hp.visualize_hp_config()
 
     # 1.4) Anbindung zum Heizelement (zusätzliche Größen)
@@ -120,7 +120,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 1 * 1 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
+    tmax = 0.25 * 1 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------

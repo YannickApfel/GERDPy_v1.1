@@ -364,8 +364,8 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
 
             calc_T_surf = True
 
-            # Q_sensibel, Q_latent, Q_Verdunstung = 0
-            sen, lat, eva = 0, 0, 0  # Energie zur Schneeschmelze kommt definitorisch aus dem Boden, nicht der Umgebung
+            # Q_sensibel, Q_latent = 0
+            sen, lat = False, False  # Energie zur Schneeschmelze kommt definitorisch aus dem Boden, nicht der Umgebung
 
             # 2.4) iterative Lösung der stationären Leistungsbilanz F_T = 0 am Heizelement (Oberfläche + Umgebung) nach T
             Theta_surf_sol, Q_lat, Q_sen, Q_eva = solve_F_T(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, he.A_he)
@@ -386,7 +386,7 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
             Q_rad = Q_rad_T(Theta_Schm, rad, S_w, Theta_inf, B, Phi, he.A_he)
 
             # Q_Verdunstung
-            Q_eva = 0
+            Q_eva = Q_eva_T(Theta_Schm, eva, Theta_Schm, m_Rw_0, Theta_inf, u_inf, h_NHN, Phi, he.A_he)
 
             # 2.5) Ermittlung vorhandene Restleistung (f. Schnee- und Eisschmelze)
             Q_R = Q_0 - R_f * (Q_con + Q_rad + Q_eva)
@@ -396,8 +396,8 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
                 ''' Simulationsmodus 2'''
                 sim_mod = 2  # Simulationsmodus aufzeichnen
 
-                # Q_sensibel, Q_latent, Q_Verdunstung = 0
-                sen, lat, eva = 0, 0, 0  # Energie zur Schneeschmelze kommt definitorisch aus dem Boden, nicht der Umgebung
+                # Q_sensibel, Q_latent = 0
+                sen, lat = False, False
 
                 # 2.7) iterative Lösung der stationären Leistungsbilanz F_Q = 0 am Heizelement (Erdboden + Oberfläche + Umgebung))
                 Q_load, Q_lat, Q_sen, Q_eva = solve_F_Q(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, Theta_b_0, R_th, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, he.A_he)
@@ -455,7 +455,7 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
             calc_T_surf = True
 
             # Q_sensibel, Q_latent = 0
-            sen, lat = 0, 0  # Energie zur Schneeschmelze kommt definitorisch aus dem Boden, nicht der Umgebung
+            sen, lat = False, False  # Energie zur Schneeschmelze kommt definitorisch aus dem Boden, nicht der Umgebung
 
             # 2.4) iterative Lösung der stationären Leistungsbilanz F_T = 0 am Heizelement (Oberfläche + Umgebung) nach T
             Theta_surf_sol, Q_lat, Q_sen, Q_eva = solve_F_T(R_f, con, rad, eva, sen, lat, S_w, Theta_inf, u_inf, Theta_surf_0, m_Rw_0, h_NHN, Phi, B, he.A_he)
