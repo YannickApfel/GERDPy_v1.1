@@ -352,7 +352,6 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
 
         # 2.1) Pre-Processing
         R_f = 0.2  # free-area ratio
-        Theta_surf_0 = Theta_Schm  # Fixieren der Oberflächentemperatur
 
         # 2.2) verfügbare Entzugsleistung
         Q_0 = (Theta_b_0 - Theta_surf_0) * R_th ** -1
@@ -375,13 +374,16 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
 
         else:  # Q_0 >= 0, nutzbare T-Differenz im Boden vorhanden (Regelfall)
             ''' Simulationsmodi 2 & 3'''
-            # 2.4) Oberflächenverluste (explizit für Theta_surf_0 = Theta_Schm formuliert)
+            # 2.4) Oberflächenverluste (explizit für Theta_surf_0 := Theta_Schm formuliert)
+            
+            # Q_0 (neu berechnet mit Theta_surf_0 := Theta_Schm)
+            Q_0 = (Theta_b_0 - Theta_Schm) * R_th ** -1
 
-            # Q_Konvektion
-            Q_con = Q_con_T(Theta_surf_0, con, u_inf, Theta_inf, he.A_he)
+            # Q_Konvektion (neu berechnet mit Theta_surf_0 := Theta_Schm)
+            Q_con = Q_con_T(Theta_Schm, con, u_inf, Theta_inf, he.A_he)
 
-            # Q_Strahlung
-            Q_rad = Q_rad_T(Theta_surf_0, rad, S_w, Theta_inf, B, Phi, he.A_he)
+            # Q_Strahlung (neu berechnet mit Theta_surf_0 := Theta_Schm)
+            Q_rad = Q_rad_T(Theta_Schm, rad, S_w, Theta_inf, B, Phi, he.A_he)
 
             # Q_Verdunstung
             Q_eva = 0
