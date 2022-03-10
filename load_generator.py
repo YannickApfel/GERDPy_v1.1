@@ -390,9 +390,8 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
             Q_R = Q_0 - R_f * (Q_con + Q_rad + Q_eva)
 
             # 2.6) Fallunterscheidung Restleistung Q_R
-            ''' Simulationsmodus 2'''
             if Q_R < 0:  # keine Restleistung für Schneeschmelze vorhanden
-
+                ''' Simulationsmodus 2'''
                 sim_mod = 2  # Simulationsmodus aufzeichnen
 
                 # Q_sensibel, Q_latent, Q_Verdunstung = 0

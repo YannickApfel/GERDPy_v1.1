@@ -40,7 +40,7 @@ def main():
     # 1.1) Erdboden
     a = 1.0e-6                                      # Temperaturleitfähigkeit [m²/s]
     lambda_g = 2.0                                  # Wärmeleitfähigkeit [W/mK]
-    Theta_g = 10.0                                  # ungestörte Bodentemperatur [°C]
+    Theta_g = 2.0                                  # ungestörte Bodentemperatur [°C]
 
     # 1.2) Erdwärmesondenfeld
 
