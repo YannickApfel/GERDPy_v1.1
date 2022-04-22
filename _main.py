@@ -20,7 +20,7 @@ from scipy.constants import pi
 # import GERDPy-modules
 import boreholes, heatpipes, heating_element, gfunction, load_aggregation
 from load_generator import *
-from R_th_tot import *
+from R_th import *
 from weather_data import get_weather_data
 from geometrycheck import check_geometry
 from utilities import Q_moving_average
@@ -141,8 +141,13 @@ def main():
     # 3.) Ermittlung thermischer Widerstände von Bohrlochrand bis Oberfläche
     # -------------------------------------------------------------------------
 
-    R_th = R_th_tot(lambda_g, boreField, hp, he)  # Gesamtsystem
-    R_th_ghp = R_th_g_hp(lambda_g, boreField, hp)  # Boden bis Heatpipes
+    # Gesamtsystem
+    R_th = R_th_c(boreField) + R_th_b(lambda_g, boreField, hp) + \
+        R_th_hp(boreField, hp) + R_th_he(he)
+
+    # Boden bis Heatpipes
+    R_th_ghp = R_th_c(boreField) + R_th_b(lambda_g, boreField, hp) + \
+        R_th_hp(boreField, hp)
 
     # -------------------------------------------------------------------------
     # 4.) Ermittlung der G-Function (Bodenmodell)
