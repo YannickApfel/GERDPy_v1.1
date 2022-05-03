@@ -88,7 +88,7 @@ def main():
     # 1.5) Heizelement
 
     # Fläche Heizelement [m2]
-    A_he = 50
+    A_he = 35
 
     # minimaler Oberflächenabstand [m]
     x_min = .015
@@ -120,7 +120,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 0.25 * 1 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
+    tmax = 1 * 1 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------

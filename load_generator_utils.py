@@ -18,18 +18,21 @@ import math, sys
 import CoolProp.CoolProp as CP
 
 
-# Stoffwerte (Normbedingungen, wo nicht anders vermerkt)
-lambda_l = 0.0262  # Wärmeleitfähigkeit von Luft [W/m*K]
-a_l = lambda_l / (1.293 * 1005)  # T-Leitfähigkeit von Luft [m²/s]
-theta_l = 13.3e-6  # kin. Vis. von Luft [m²/s]
-rho_w = 997  # Dichte von Wasser (bei 25 °C) [kg/m³]
-rho_l = 1.33  # Dichte trockener Luft (bei 0 °C, 1 bar) [kg/m³]
-h_Ph_sl = 333e3  # Phasenwechselenthalpie Schnee <=> Wasser [J/kg]
-h_Ph_lg = 2499e3  # Phasenwechselenthalpie Wasser <=> Dampf [J/kg]
-c_p_s = 2.04e3  # spez. Wärmekapazität Eis / Schnee (bei 0 °C) [J/kgK]
-c_p_w = 4212  # spez. Wärmekapazität Wasser (bei 0 °C) [J/kgK]
-c_p_l = 1005  # spez. Wärmekapazität Luft (bei 0 °C, 1 bar) [J/kgK]
-Theta_Schm = 0  # Schmelztemperatur von Eis / Schnee [°C]
+# Stoffwerte (u. a. nach [VDI2013])
+# Wasser
+rho_w = 999.84  # Dichte von Wasser (p = 1 bar, T = 0 °C) [kg/m³]
+h_Ph_sl = 333e3  # Phasenwechselenthalpie (Schmelz-) fest <=> flüssig [J/kg]
+h_Ph_lg = 2500.9e3  # Phasenwechselenthalpie (Verdampfungs-) flüssig <=> gasförmig (T = 0,01 °C) [J/kg]
+c_p_s = 2.106e3  # spez. Wärmekapazität Eis / Schnee (T = 0 °C) [J/kgK]
+c_p_w = 4219  # spez. Wärmekapazität Wasser (T = 0 °C) [J/kgK]
+Theta_Schm = 0  # Schmelztemperatur von Eis / Schnee (p = 1 bar) [°C]
+# Luft
+rho_l = 1.276  # Dichte trockener Luft (p = 1 bar, T = 0 °C) [kg/m³]
+c_p_l = 1006  # spez. Wärmekapazität Luft (p = 1 bar, T = 0 °C) [J/kgK]
+lambda_l = 0.0244  # Wärmeleitfähigkeit von Luft [W/m*K]
+a_l = lambda_l / (rho_l * c_p_l)  # T-Leitfähigkeit von Luft [m²/s]
+theta_l = 13.5e-6  # kin. Vis. von Luft (p = 1 bar, T = 0 °C) [m²/s]
+# arbiträr festgelegt
 H_max = 2  # maximal erlaubte Wasserhöhe auf dem Heizelement [mm]
 
 
