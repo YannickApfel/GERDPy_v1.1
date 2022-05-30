@@ -120,7 +120,7 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 1 * 1 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
+    tmax = 1 * 12 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
     Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
 
     # -------------------------------------------------------------------------
@@ -207,6 +207,13 @@ def main():
     Q = np.zeros(Nt)
     Q_N = np.zeros(Nt)
     Q_V = np.zeros(Nt)
+    
+    # temp
+    # Q_lat = np.zeros(Nt)
+    # Q_sen = np.zeros(Nt)
+    # Q_con = np.zeros(Nt)
+    # Q_rad = np.zeros(Nt)
+    Q_eva = np.zeros(Nt)
 
     # Hilfsgrößen
     start_sb_counter = np.zeros(Nt)
@@ -226,14 +233,14 @@ def main():
 
         # Ermittlung der Entzugsleistung im 1. Zeitschritt
         if i == 0:  # Annahme Theta_b = Theta_surf = Theta_g, Heizelementoberfläche trocken und schneefrei
-            Q[i], Q_N[i], Q_V[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = \
+            Q[i], Q_N[i], Q_V[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i], Q_eva[i] = \
                 load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], he, Theta_g,
                      R_th, R_th_ghp, Theta_g, B[i], Phi[i], RR[i], 0, 0, start_sb, 
                      l_An * N, lambda_p, lambda_iso, r_iso_An, r_pa, r_pi)
 
         # Ermittlung der Entzugsleistung im Zeitschritt 2, 3, ..., Nt
         if i > 0:
-            Q[i], Q_N[i], Q_V[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i] = \
+            Q[i], Q_N[i], Q_V[i], calc_T_surf, Theta_surf[i], m_Rw[i], m_Rs[i], sb_active[i], sim_mod[i], Q_eva[i] = \
                 load(h_NHN, u_inf[i], Theta_inf[i], S_w[i], he, Theta_b[i-1], 
                      R_th, R_th_ghp, Theta_surf[i-1], B[i], Phi[i], RR[i], m_Rw[i-1], m_Rs[i-1], start_sb, 
                      l_An * N, lambda_p, lambda_iso, r_iso_An, r_pa, r_pi)
@@ -323,6 +330,10 @@ def main():
     ax1.plot(hours, Q / A_he, 'k-', lw=1.2)
     ax1.plot(hours, Q_ma / A_he, 'r--', lw=1.2)
     ax1.plot(hours, Q_V / A_he, 'g-', lw=1.2)
+    
+    # temp {Verdunstung}
+    ax1.plot(hours, Q_eva / A_he, 'y-', lw=1.2)
+
     ax1.legend(['Entzugsleistung', 'Entzugsleistung-24h-gemittelt',
                 'Verluste (Anbindung + Unterseite Heizelement)'],
                prop={'size': font['size'] - 4}, loc='upper left')

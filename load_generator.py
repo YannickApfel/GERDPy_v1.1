@@ -480,4 +480,4 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
     # 4.3) Q_V [W]
     Q_V_sol = Q_V(Theta_b_0 - Q_load * R_th_ghp, Theta_inf, lambda_p, lambda_iso, l_R_An, r_iso, r_pa, r_pi, he)
 
-    return Q_load, Q_N, Q_V_sol, calc_T_surf, Theta_surf_sol, m_w_1, m_s_1, sb_active, sim_mod
+    return Q_load, Q_N, Q_V_sol, calc_T_surf, Theta_surf_sol, m_w_1, m_s_1, sb_active, sim_mod, Q_eva
