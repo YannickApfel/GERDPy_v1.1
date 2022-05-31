@@ -324,18 +324,15 @@ def main():
     font = {'weight': 'bold', 'size': 10}
     plt.rc('font', **font)
 
-    # Lastprofil {Entzugsleistung - Entzugsleistung (gleitender Mittelwert 24h) - Verluste (Anbindung + Unterseite Heizelement)}
+    # Lastprofil {Entzugsleistung - Entzugsleistung (gleitender Mittelwert 24h) - Verdunstungsleistung - Verluste (Anbindung + Unterseite Heizelement)}
     ax1 = fig1.add_subplot(411)
     ax1.set_ylabel(r'$q$ [W/m2]')
     ax1.plot(hours, Q / A_he, 'k-', lw=1.2)
     ax1.plot(hours, Q_ma / A_he, 'r--', lw=1.2)
     ax1.plot(hours, Q_V / A_he, 'g-', lw=1.2)
-    
-    # temp {Verdunstung}
     ax1.plot(hours, Q_eva / A_he, 'y-', lw=1.2)
-
     ax1.legend(['Entzugsleistung', 'Entzugsleistung-24h-gemittelt',
-                'Verluste (Anbindung + Unterseite Heizelement)'],
+                'Verluste (Anbindung + Unterseite Heizelement)', 'Verdunstung'],
                prop={'size': font['size'] - 4}, loc='upper left')
     ax1.grid('major')
 
