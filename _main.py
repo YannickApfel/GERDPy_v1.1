@@ -119,10 +119,15 @@ def main():
     ''' dt darf 3600s (eine Stunde) aufgrund des Gültigkeitsbereichs der G-Functions
         nicht unterschreiten
     '''
-    dt = 3600.                                      # Zeitschrittweite [s]
-    tmax = 1 * 12 * (8760./12) * 3600.            # Gesamt-Simulationsdauer [s]
-    Nt = int(np.ceil(tmax/dt))                      # Anzahl Zeitschritte [-]
-
+    dt = 3600.                                   # Zeitschrittweite [s]
+    sim_multiple_years = True
+    a_sim = 4
+    if sim_multiple_years:
+        tmax = a_sim * 365 * 24 * dt  # total simulation time (multiple years) [s]
+    else:
+        tmax = 1 * 12 * (8760./12) * 3600.   # Gesamt-Simulationsdauer [s]  # total simulation time [s] (default: 730 h * 3600 s)
+    Nt = int(np.ceil(tmax / dt))  # number of time steps [-]
+        
     # -------------------------------------------------------------------------
     # 2.) Überprüfung der geometrischen Verträglichkeit (Sonden & Heatpipes)
     # -------------------------------------------------------------------------
@@ -315,11 +320,12 @@ def main():
     hours = np.array([(j+1)*dt/3600. for j in range(Nt)])
 
     # -------------------------------------------------------------------------
-    # 8.1) Figure 1 (Plots für End-User)
+    # 8.1) Figure 1 & 2 (Plots für End-User)
     # -------------------------------------------------------------------------
 
     plt.rc('figure')
     fig1 = plt.figure()
+    fig2 = plt.figure()
 
     font = {'weight': 'bold', 'size': 10}
     plt.rc('font', **font)
@@ -363,45 +369,63 @@ def main():
     ax4.legend(['T_Bohrlochrand', 'T_Oberflaeche'],
                prop={'size': font['size'] - 4}, loc='upper right')
     ax4.grid('major')
+    
+    # Borehole wall temperature annual stacked curves
+    # fig2
+    ax5 = fig2.add_subplot(211)
+    ax5.set_xlabel(r'$t$ [h]')
+    ax5.set_ylabel(r'$T$ [degC]')
+    if sim_multiple_years:
+        colour_map = iter(plt.cm.gist_rainbow(np.linspace(0, 1, a_sim)))
+        for j in range(a_sim):
+            ax5.plot(np.arange(1, 8761, 1, dtype=int), Theta_b[(0+j*8760):(8760+j*8760)], c=next(colour_map), 
+                     lw=0.7, label=f'Borehole wall temperature - Year {j+1}')
+    else:
+        ax5.plot(hours, Theta_b, 'r-', lw=1.2, label='Borehole wall temperature - Year 1')
+    ax5.legend(prop={'size': font['size'] - 2}, loc='lower center')
+    ax5.grid('major')
+    
+    # Borehole wall temperature single value over years
+    # fig2
 
     # -------------------------------------------------------------------------
     # 8.2) Figure 2 (zusätzliche Plots)
     # -------------------------------------------------------------------------
 
-    plt.rc('figure')
-    fig2 = plt.figure()
+    # plt.rc('figure')
+    # fig2 = plt.figure()
 
-    font = {'weight': 'bold', 'size': 10}
-    plt.rc('font', **font)
+    # font = {'weight': 'bold', 'size': 10}
+    # plt.rc('font', **font)
 
-    # Darstellungen Simulationsmodus
-    ax5 = fig2.add_subplot(311)
-    ax5.plot(hours, start_sb_counter, 'k--', lw=1.5)
-    ax5.plot(hours, sb_active, 'g-', lw=1.3)
-    ax5.plot(hours, sim_mod, 'y-', lw=1.3)
-    ax5.plot(hours, sim_mod, 'y-', lw=1.3)    
-    ax5.legend(['sb_active', 'sim_mod'],
-               prop={'size': font['size'] - 4}, loc='upper right')
-    ax5.grid('major')
+    # # Darstellungen Simulationsmodus
+    # ax5 = fig2.add_subplot(311)
+    # ax5.plot(hours, start_sb_counter, 'k--', lw=1.5)
+    # ax5.plot(hours, sb_active, 'g-', lw=1.3)
+    # ax5.plot(hours, sim_mod, 'y-', lw=1.3)
+    # ax5.plot(hours, sim_mod, 'y-', lw=1.3)    
+    # ax5.legend(['sb_active', 'sim_mod'],
+    #            prop={'size': font['size'] - 4}, loc='upper right')
+    # ax5.grid('major')
     
-    # Wasser- und Schneebilanzlinie (Wasserequivalent)
-    ax6 = fig2.add_subplot(312)
-    ax6.set_ylabel('[mm]')
-    ax6.plot(hours, m_Rw / (A_he * (997 / 1000)), 'b-', lw=0.8)
-    ax6.plot(hours, m_Rs / (A_he * (997 / 1000)), 'g-', lw=0.8)
-    ax6.legend(['Wasserhoehe', 'Schneehoehe'],
-               prop={'size': font['size'] - 4}, loc='upper left')
-    ax6.grid('major')
+    # # Wasser- und Schneebilanzlinie (Wasserequivalent)
+    # ax6 = fig2.add_subplot(312)
+    # ax6.set_ylabel('[mm]')
+    # ax6.plot(hours, m_Rw / (A_he * (997 / 1000)), 'b-', lw=0.8)
+    # ax6.plot(hours, m_Rs / (A_he * (997 / 1000)), 'g-', lw=0.8)
+    # ax6.legend(['Wasserhoehe', 'Schneehoehe'],
+    #            prop={'size': font['size'] - 4}, loc='upper left')
+    # ax6.grid('major')
 
-    # Temperaturverläufe Bohrlochrand und Oberfläche Heizelement
-    ax7 = fig2.add_subplot(313)
-    ax7.set_xlabel(r'$t$ [h]')
-    ax7.set_ylabel(r'$T$ [degC]')
-    ax7.plot(hours, Theta_b, 'r-', lw=1.2)
-    ax7.plot(hours, Theta_surf, 'c-', lw=0.6)
-    ax7.legend(['T_Bohrlochrand', 'T_Oberflaeche'],
-               prop={'size': font['size'] - 4}, loc='upper right')
-    ax7.grid('major')
+    # # Temperaturverläufe Bohrlochrand und Oberfläche Heizelement
+    # ax7 = fig2.add_subplot(313)
+    # ax7.set_xlabel(r'$t$ [h]')
+    # ax7.set_ylabel(r'$T$ [degC]')
+    # ax7.plot(hours, Theta_b, 'r-', lw=1.2)
+    # ax7.plot(hours, Theta_surf, 'c-', lw=0.6)
+    # ax7.legend(['T_Bohrlochrand', 'T_Oberflaeche'],
+    #            prop={'size': font['size'] - 4}, loc='upper right')
+    # ax7.grid('major')
 
     # Beschriftung Achsenwerte
     ax1.xaxis.set_minor_locator(AutoMinorLocator())
@@ -414,10 +438,10 @@ def main():
     ax4.yaxis.set_minor_locator(AutoMinorLocator())
     ax5.xaxis.set_minor_locator(AutoMinorLocator())
     ax5.yaxis.set_minor_locator(AutoMinorLocator())
-    ax6.xaxis.set_minor_locator(AutoMinorLocator())
-    ax6.yaxis.set_minor_locator(AutoMinorLocator())
-    ax7.xaxis.set_minor_locator(AutoMinorLocator())
-    ax7.yaxis.set_minor_locator(AutoMinorLocator())
+    # ax6.xaxis.set_minor_locator(AutoMinorLocator())
+    # ax6.yaxis.set_minor_locator(AutoMinorLocator())
+    # ax7.xaxis.set_minor_locator(AutoMinorLocator())
+    # ax7.yaxis.set_minor_locator(AutoMinorLocator())
 
     # plt.tight_layout()
     plt.show()
