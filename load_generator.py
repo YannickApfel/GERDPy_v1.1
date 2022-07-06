@@ -324,10 +324,10 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
 
     # 1.) Teil-Wärmeströme
     con = True  # aktivieren oder deaktivieren (für unit-testing)
-    rad = True
-    eva = True
-    sen = True
-    lat = True
+    rad = False
+    eva = False
+    sen = False
+    lat = False
 
     # 2.) Ermittlung Entzugsleistung Q_load und Oberflächentemperatur Theta_surf_sol
     ''' Simulationsmodi 1-3'''
@@ -426,7 +426,7 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
                     Q_lat = rho_w * h_Ph_sl * V_s
 
                 Theta_surf_sol = Theta_Schm
-                Q_load = Q_0
+                Q_load = Q_lat + Q_sen + R_f * (Q_con + Q_rad + Q_eva)
 
                 ''' Simulationsmodi 4 & 5'''
                 ''' Erdboden, Heizelement-Oberfläche und Umgebung bilden ein stationäres System, wobei sich

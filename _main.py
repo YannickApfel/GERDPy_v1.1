@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import time as tim
 import numpy as np
 from matplotlib.ticker import AutoMinorLocator
+from matplotlib.ticker import MaxNLocator
 from scipy.constants import pi
 
 # import GERDPy-modules
@@ -125,7 +126,7 @@ def main():
     if sim_multiple_years:
         tmax = a_sim * 365 * 24 * dt  # total simulation time (multiple years) [s]
     else:
-        tmax = 1 * 12 * (8760./12) * 3600.   # Gesamt-Simulationsdauer [s]  # total simulation time [s] (default: 730 h * 3600 s)
+        tmax = 0.1 * 1 * (8760./12) * 3600.   # Gesamt-Simulationsdauer [s]  # total simulation time [s] (default: 730 h * 3600 s)
     Nt = int(np.ceil(tmax / dt))  # number of time steps [-]
         
     # -------------------------------------------------------------------------
@@ -372,60 +373,85 @@ def main():
     
     # Borehole wall temperature annual stacked curves
     # fig2
-    ax5 = fig2.add_subplot(211)
-    ax5.set_xlabel(r'$t$ [h]')
-    ax5.set_ylabel(r'$T$ [degC]')
     if sim_multiple_years:
+        ax5 = fig2.add_subplot(211)
+        ax5.set_xlabel(r'$t$ [h]')
+        ax5.set_ylabel(r'$T$ [degC]')
         colour_map = iter(plt.cm.gist_rainbow(np.linspace(0, 1, a_sim)))
         for j in range(a_sim):
             ax5.plot(np.arange(1, 8761, 1, dtype=int), Theta_b[(0+j*8760):(8760+j*8760)], c=next(colour_map), 
                      lw=0.7, label=f'Borehole wall temperature - Year {j+1}')
     else:
+        ax5 = fig2.add_subplot(111)
+        ax5.set_xlabel(r'$t$ [h]')
+        ax5.set_ylabel(r'$T$ [degC]')
         ax5.plot(hours, Theta_b, 'r-', lw=1.2, label='Borehole wall temperature - Year 1')
     ax5.legend(prop={'size': font['size'] - 2}, loc='lower center')
     ax5.grid('major')
     
-    # Borehole wall temperature single value over years
+    # Borehole wall temperature at beginning of heating period
     # fig2
-
+    if sim_multiple_years:
+        ax6 = fig2.add_subplot(212)
+        ax6.set_xlabel(r'$Years$ [a]')
+        ax6.set_ylabel(r'$T$ [degC]')
+        ax6_x = np.arange(0, a_sim+1, 1, dtype=int)
+        # straight connecting lines:
+        ax6.plot([ax6_x[0], ax6_x[1]], [Theta_g, Theta_b[5860]], 'b', linewidth=1)
+        for j in range(a_sim):
+            if j<(a_sim-1):
+                ax6.plot([ax6_x[j+1], ax6_x[j+2]], [Theta_b[5860+j*8760], Theta_b[5860+(j+1)*8760]], 'b', linewidth=1, label='_nolegend_')
+            else:
+                break
+        # scatter plot:
+        ax6.plot(ax6_x[0], Theta_g, marker='x', markersize=10, markeredgecolor='green', label='Undisturbed ground temperature')
+        for j in range(a_sim):
+            ax6.plot(ax6_x[j+1], Theta_b[5860+j*8760], color='red', marker='o', markersize=10, markeredgewidth=0.0)
+            if j==0:
+                ax6.plot(ax6_x[j+1], Theta_b[5860+j*8760], color='red', marker='o', markersize=10, markeredgewidth=0.0, 
+                         label='Borehole wall temperature at the beginning of the heating period (01.09.)')
+    ax6.legend(prop={'size': font['size'] - 2}, loc='upper right')
+    ax6.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax6.grid('major')
+    
     # -------------------------------------------------------------------------
     # 8.2) Figure 2 (zusätzliche Plots)
     # -------------------------------------------------------------------------
 
-    # plt.rc('figure')
-    # fig2 = plt.figure()
+    plt.rc('figure')
+    fig3 = plt.figure()
 
-    # font = {'weight': 'bold', 'size': 10}
-    # plt.rc('font', **font)
+    font = {'weight': 'bold', 'size': 10}
+    plt.rc('font', **font)
 
-    # # Darstellungen Simulationsmodus
-    # ax5 = fig2.add_subplot(311)
-    # ax5.plot(hours, start_sb_counter, 'k--', lw=1.5)
-    # ax5.plot(hours, sb_active, 'g-', lw=1.3)
-    # ax5.plot(hours, sim_mod, 'y-', lw=1.3)
-    # ax5.plot(hours, sim_mod, 'y-', lw=1.3)    
-    # ax5.legend(['sb_active', 'sim_mod'],
-    #            prop={'size': font['size'] - 4}, loc='upper right')
-    # ax5.grid('major')
+    # Darstellungen Simulationsmodus
+    ax7 = fig3.add_subplot(311)
+    ax7.plot(hours, start_sb_counter, 'k--', lw=1.5)
+    ax7.plot(hours, sb_active, 'g-', lw=1.3)
+    ax7.plot(hours, sim_mod, 'y-', lw=1.3)
+    ax7.plot(hours, sim_mod, 'y-', lw=1.3)    
+    ax7.legend(['sb_active', 'sim_mod'],
+                prop={'size': font['size'] - 4}, loc='upper right')
+    ax7.grid('major')
     
-    # # Wasser- und Schneebilanzlinie (Wasserequivalent)
-    # ax6 = fig2.add_subplot(312)
-    # ax6.set_ylabel('[mm]')
-    # ax6.plot(hours, m_Rw / (A_he * (997 / 1000)), 'b-', lw=0.8)
-    # ax6.plot(hours, m_Rs / (A_he * (997 / 1000)), 'g-', lw=0.8)
-    # ax6.legend(['Wasserhoehe', 'Schneehoehe'],
-    #            prop={'size': font['size'] - 4}, loc='upper left')
-    # ax6.grid('major')
+    # Wasser- und Schneebilanzlinie (Wasserequivalent)
+    ax8 = fig3.add_subplot(312)
+    ax8.set_ylabel('[mm]')
+    ax8.plot(hours, m_Rw / (A_he * (997 / 1000)), 'b-', lw=0.8)
+    ax8.plot(hours, m_Rs / (A_he * (997 / 1000)), 'g-', lw=0.8)
+    ax8.legend(['Wasserhoehe', 'Schneehoehe'],
+                prop={'size': font['size'] - 4}, loc='upper left')
+    ax8.grid('major')
 
-    # # Temperaturverläufe Bohrlochrand und Oberfläche Heizelement
-    # ax7 = fig2.add_subplot(313)
-    # ax7.set_xlabel(r'$t$ [h]')
-    # ax7.set_ylabel(r'$T$ [degC]')
-    # ax7.plot(hours, Theta_b, 'r-', lw=1.2)
-    # ax7.plot(hours, Theta_surf, 'c-', lw=0.6)
-    # ax7.legend(['T_Bohrlochrand', 'T_Oberflaeche'],
-    #            prop={'size': font['size'] - 4}, loc='upper right')
-    # ax7.grid('major')
+    # Temperaturverläufe Bohrlochrand und Oberfläche Heizelement
+    ax9 = fig3.add_subplot(313)
+    ax9.set_xlabel(r'$t$ [h]')
+    ax9.set_ylabel(r'$T$ [degC]')
+    ax9.plot(hours, Theta_b, 'r-', lw=1.2)
+    ax9.plot(hours, Theta_surf, 'c-', lw=0.6)
+    ax9.legend(['T_Bohrlochrand', 'T_Oberflaeche'],
+                prop={'size': font['size'] - 4}, loc='upper right')
+    ax9.grid('major')
 
     # Beschriftung Achsenwerte
     ax1.xaxis.set_minor_locator(AutoMinorLocator())
@@ -438,10 +464,14 @@ def main():
     ax4.yaxis.set_minor_locator(AutoMinorLocator())
     ax5.xaxis.set_minor_locator(AutoMinorLocator())
     ax5.yaxis.set_minor_locator(AutoMinorLocator())
-    # ax6.xaxis.set_minor_locator(AutoMinorLocator())
-    # ax6.yaxis.set_minor_locator(AutoMinorLocator())
-    # ax7.xaxis.set_minor_locator(AutoMinorLocator())
-    # ax7.yaxis.set_minor_locator(AutoMinorLocator())
+    ax6.xaxis.set_minor_locator(AutoMinorLocator())
+    ax6.yaxis.set_minor_locator(AutoMinorLocator())
+    ax7.xaxis.set_minor_locator(AutoMinorLocator())
+    ax7.yaxis.set_minor_locator(AutoMinorLocator())
+    ax8.xaxis.set_minor_locator(AutoMinorLocator())
+    ax8.yaxis.set_minor_locator(AutoMinorLocator())
+    ax9.xaxis.set_minor_locator(AutoMinorLocator())
+    ax9.yaxis.set_minor_locator(AutoMinorLocator())
 
     # plt.tight_layout()
     plt.show()
