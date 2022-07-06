@@ -411,7 +411,6 @@ def main():
                 ax6.plot(ax6_x[j+1], Theta_b[5860+j*8760], color='red', marker='o', markersize=10, markeredgewidth=0.0, 
                          label='Borehole wall temperature at the beginning of the heating period (01.09.)')
     ax6.legend(prop={'size': font['size'] - 2}, loc='upper right')
-    ax6.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax6.grid('major')
     
     # -------------------------------------------------------------------------
@@ -465,6 +464,7 @@ def main():
     ax5.xaxis.set_minor_locator(AutoMinorLocator())
     ax5.yaxis.set_minor_locator(AutoMinorLocator())
     ax6.xaxis.set_minor_locator(AutoMinorLocator())
+    ax6.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax6.yaxis.set_minor_locator(AutoMinorLocator())
     ax7.xaxis.set_minor_locator(AutoMinorLocator())
     ax7.yaxis.set_minor_locator(AutoMinorLocator())
