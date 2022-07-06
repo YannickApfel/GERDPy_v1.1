@@ -324,10 +324,10 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
 
     # 1.) Teil-Wärmeströme
     con = True  # aktivieren oder deaktivieren (für unit-testing)
-    rad = False
-    eva = False
-    sen = False
-    lat = False
+    rad = True
+    eva = True
+    sen = True
+    lat = True
 
     # 2.) Ermittlung Entzugsleistung Q_load und Oberflächentemperatur Theta_surf_sol
     ''' Simulationsmodi 1-3'''
