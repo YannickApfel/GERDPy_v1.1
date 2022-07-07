@@ -342,6 +342,8 @@ def main():
                 'Verluste (Anbindung + Unterseite Heizelement)', 'Verdunstung'],
                prop={'size': font['size'] - 4}, loc='upper left')
     ax1.grid('major')
+    ax1.xaxis.set_minor_locator(AutoMinorLocator())
+    ax1.yaxis.set_minor_locator(AutoMinorLocator())
 
     # Schneefallrate - Schneehöhe - Umgebungstemperatur - Windgeschwindigkeit
     ax2 = fig1.add_subplot(412)
@@ -351,6 +353,8 @@ def main():
     ax2.legend(['Schneefallrate', 'Schneehöhe'],
                prop={'size': font['size'] - 4}, loc='upper left')
     ax2.grid('major')
+    ax2.xaxis.set_minor_locator(AutoMinorLocator())
+    ax2.yaxis.set_minor_locator(AutoMinorLocator())
 
     # Umgebungstemperatur - Windgeschwindigkeit
     ax3 = fig1.add_subplot(413)
@@ -360,6 +364,8 @@ def main():
     ax3.legend(['Umgebungstemperatur', 'Windgeschwindigkeit'],
                  prop={'size': font['size'] - 4}, loc='upper right')
     ax3.grid('major')
+    ax3.xaxis.set_minor_locator(AutoMinorLocator())
+    ax3.yaxis.set_minor_locator(AutoMinorLocator())
 
     # Temperaturverläufe Bohrlochrand und Oberfläche Heizelement
     ax4 = fig1.add_subplot(414)
@@ -370,6 +376,8 @@ def main():
     ax4.legend(['T_Bohrlochrand', 'T_Oberflaeche'],
                prop={'size': font['size'] - 4}, loc='upper right')
     ax4.grid('major')
+    ax4.xaxis.set_minor_locator(AutoMinorLocator())
+    ax4.yaxis.set_minor_locator(AutoMinorLocator())
     
     # Borehole wall temperature annual stacked curves
     # fig2
@@ -388,6 +396,8 @@ def main():
         ax5.plot(hours, Theta_b, 'r-', lw=1.2, label='Borehole wall temperature - Year 1')
     ax5.legend(prop={'size': font['size'] - 2}, loc='lower center')
     ax5.grid('major')
+    ax5.xaxis.set_minor_locator(AutoMinorLocator())
+    ax5.yaxis.set_minor_locator(AutoMinorLocator())
     
     # Borehole wall temperature at beginning of heating period
     # fig2
@@ -410,8 +420,11 @@ def main():
             if j==0:
                 ax6.plot(ax6_x[j+1], Theta_b[5860+j*8760], color='red', marker='o', markersize=10, markeredgewidth=0.0, 
                          label='Borehole wall temperature at the beginning of the heating period (01.09.)')
-    ax6.legend(prop={'size': font['size'] - 2}, loc='upper right')
-    ax6.grid('major')
+        ax6.legend(prop={'size': font['size'] - 2}, loc='upper right')
+        ax6.grid('major')
+        ax6.xaxis.set_minor_locator(AutoMinorLocator())
+        ax6.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax6.yaxis.set_minor_locator(AutoMinorLocator())
     
     # -------------------------------------------------------------------------
     # 8.2) Figure 2 (zusätzliche Plots)
@@ -432,6 +445,8 @@ def main():
     ax7.legend(['sb_active', 'sim_mod'],
                 prop={'size': font['size'] - 4}, loc='upper right')
     ax7.grid('major')
+    ax7.xaxis.set_minor_locator(AutoMinorLocator())
+    ax7.yaxis.set_minor_locator(AutoMinorLocator())
     
     # Wasser- und Schneebilanzlinie (Wasserequivalent)
     ax8 = fig3.add_subplot(312)
@@ -441,6 +456,8 @@ def main():
     ax8.legend(['Wasserhoehe', 'Schneehoehe'],
                 prop={'size': font['size'] - 4}, loc='upper left')
     ax8.grid('major')
+    ax8.xaxis.set_minor_locator(AutoMinorLocator())
+    ax8.yaxis.set_minor_locator(AutoMinorLocator())
 
     # Temperaturverläufe Bohrlochrand und Oberfläche Heizelement
     ax9 = fig3.add_subplot(313)
@@ -451,25 +468,6 @@ def main():
     ax9.legend(['T_Bohrlochrand', 'T_Oberflaeche'],
                 prop={'size': font['size'] - 4}, loc='upper right')
     ax9.grid('major')
-
-    # Beschriftung Achsenwerte
-    ax1.xaxis.set_minor_locator(AutoMinorLocator())
-    ax1.yaxis.set_minor_locator(AutoMinorLocator())
-    ax2.xaxis.set_minor_locator(AutoMinorLocator())
-    ax2.yaxis.set_minor_locator(AutoMinorLocator())
-    ax3.xaxis.set_minor_locator(AutoMinorLocator())
-    ax3.yaxis.set_minor_locator(AutoMinorLocator())
-    ax4.xaxis.set_minor_locator(AutoMinorLocator())
-    ax4.yaxis.set_minor_locator(AutoMinorLocator())
-    ax5.xaxis.set_minor_locator(AutoMinorLocator())
-    ax5.yaxis.set_minor_locator(AutoMinorLocator())
-    ax6.xaxis.set_minor_locator(AutoMinorLocator())
-    ax6.xaxis.set_major_locator(MaxNLocator(integer=True))
-    ax6.yaxis.set_minor_locator(AutoMinorLocator())
-    ax7.xaxis.set_minor_locator(AutoMinorLocator())
-    ax7.yaxis.set_minor_locator(AutoMinorLocator())
-    ax8.xaxis.set_minor_locator(AutoMinorLocator())
-    ax8.yaxis.set_minor_locator(AutoMinorLocator())
     ax9.xaxis.set_minor_locator(AutoMinorLocator())
     ax9.yaxis.set_minor_locator(AutoMinorLocator())
 
