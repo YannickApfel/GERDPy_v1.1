@@ -121,12 +121,12 @@ def main():
         nicht unterschreiten
     '''
     dt = 3600.                                   # Zeitschrittweite [s]
-    sim_multiple_years = True
+    sim_multiple_years = False
     a_sim = 4
     if sim_multiple_years:
         tmax = a_sim * 365 * 24 * dt  # total simulation time (multiple years) [s]
     else:
-        tmax = 0.1 * 1 * (8760./12) * 3600.   # Gesamt-Simulationsdauer [s]  # total simulation time [s] (default: 730 h * 3600 s)
+        tmax = 1 * 12 * (8760./12) * 3600.   # Gesamt-Simulationsdauer [s]  # total simulation time [s] (default: 730 h * 3600 s)
     Nt = int(np.ceil(tmax / dt))  # number of time steps [-]
         
     # -------------------------------------------------------------------------
@@ -333,14 +333,15 @@ def main():
 
     # Lastprofil {Entzugsleistung - Entzugsleistung (gleitender Mittelwert 24h) - Verdunstungsleistung - Verluste (Anbindung + Unterseite Heizelement)}
     ax1 = fig1.add_subplot(411)
-    ax1.set_ylabel(r'$q$ [W/m2]')
-    ax1.plot(hours, Q / A_he, 'k-', lw=1.2)
-    ax1.plot(hours, Q_ma / A_he, 'r--', lw=1.2)
-    ax1.plot(hours, Q_V / A_he, 'g-', lw=1.2)
-    ax1.plot(hours, Q_eva / A_he, 'y-', lw=1.2)
-    ax1.legend(['Entzugsleistung', 'Entzugsleistung-24h-gemittelt',
-                'Verluste (Anbindung + Unterseite Heizelement)', 'Verdunstung'],
-               prop={'size': font['size'] - 4}, loc='upper left')
+    ax1.set_ylabel(r'$q$ [W/m2]', fontsize=16)
+    ax1.plot(hours, Q / A_he, 'm-', lw=0.8)
+    # ax1.plot(hours, Q_ma / A_he, 'r--', lw=1.2)
+    # ax1.plot(hours, Q_V / A_he, 'g-', lw=1.2)
+    # ax1.plot(hours, Q_eva / A_he, 'y-', lw=1.2)
+    ax1.legend(['Extracted thermal power'],
+               # , 'Extracted thermal power (24h-moving-average)'],
+                # 'Verluste (Anbindung + Unterseite Heizelement)', 'Verdunstung'],
+               prop={'size': font['size'] + 6}, loc='best')
     ax1.grid('major')
     ax1.xaxis.set_minor_locator(AutoMinorLocator())
     ax1.yaxis.set_minor_locator(AutoMinorLocator())

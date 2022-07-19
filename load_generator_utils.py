@@ -31,7 +31,7 @@ rho_l = 1.276  # Dichte trockener Luft (p = 1 bar, T = 0 °C) [kg/m³]
 c_p_l = 1006  # spez. Wärmekapazität Luft (p = 1 bar, T = 0 °C) [J/kgK]
 lambda_l = 0.0244  # Wärmeleitfähigkeit von Luft [W/m*K]
 a_l = lambda_l / (rho_l * c_p_l)  # T-Leitfähigkeit von Luft [m²/s]
-theta_l = 13.5e-6  # kin. Vis. von Luft (p = 1 bar, T = 0 °C) [m²/s]
+mu_l = 13.5e-6  # kin. Vis. von Luft (p = 1 bar, T = 0 °C) [m²/s]
 # arbiträr festgelegt
 H_max = 2  # maximal erlaubte Wasserhöhe auf dem Heizelement [mm]
 
@@ -48,7 +48,7 @@ def u_eff(v):
 
 # höhenkorrigierter Umgebungsdruck [Pa]
 def p_inf(h_NHN):
-    return 101325 * (1 - 0.0065 * h_NHN / 288.2) ** 5.265
+    return 101325 * (1 - 2.25577e-5 * h_NHN) ** 5.2559
 
 
 # Sättigungs-Dampfdruck nach ASHRAE2013 [Pa]
@@ -156,7 +156,7 @@ def T_MS(S_w, Theta_inf, B, Phi):
         T_W = (Theta_inf + 273.15) - 19.2
 
         if T_H > T_W:
-            T_H = T_W
+            T_W = T_H
 
         T_MS = (T_W ** 4 * B + T_H ** 4 * (1 - B)) ** 0.25
 
@@ -171,8 +171,8 @@ def delta(Theta_inf, h_NHN):
 
 # Stoffübergangskoeffizient [m/s]
 def beta_c(Theta_inf, u, h_NHN):
-    Pr = theta_l / a_l  # Prandtl-Zahl für Luft
-    Sc = theta_l / delta(Theta_inf, h_NHN)  # Schmidt-Zahl
+    Pr = mu_l / a_l  # Prandtl-Zahl für Luft
+    Sc = mu_l / delta(Theta_inf, h_NHN)  # Schmidt-Zahl
     alpha = alpha_kon_he_o(u)  # Verwendung der einfachen Korrelation f alpha
 
     beta_c = (Pr / Sc) ** (2/3) * alpha / (rho_l * c_p_l)
