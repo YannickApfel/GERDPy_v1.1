@@ -36,7 +36,7 @@ def main():
     # 1.0) Standort
     h_NHN = 469                                     # Höhe über Normal-Null des Standorts  [m]
     path_wd = \
-    './data/Wetterdaten_Hamburg_h.xlsx'    # Dateipfad der Wetterdaten-Datei definieren
+    './data/Wetterdaten_Hohenpeissenberg_h.xlsx'    # Dateipfad der Wetterdaten-Datei definieren
 
     # 1.1) Erdboden
     a = 1.0e-6                                      # Temperaturleitfähigkeit [m²/s]

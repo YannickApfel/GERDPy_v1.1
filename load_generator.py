@@ -323,9 +323,9 @@ def load(h_NHN, v, Theta_inf, S_w, he, Theta_b_0, R_th, R_th_ghp, Theta_surf_0, 
         sb_active = 0
 
     # 1.) Teil-Wärmeströme
-    con = False  # aktivieren oder deaktivieren (für unit-testing)
-    rad = False
-    eva = False
+    con = True  # aktivieren oder deaktivieren (für unit-testing)
+    rad = True
+    eva = True
     sen = True
     lat = True
 
